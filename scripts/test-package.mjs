@@ -24,7 +24,7 @@ assert.equal(manifest.publishConfig.registry, 'https://registry.npmjs.org');
 assert.ok(Object.values(lockfile.packages).every((entry) => !entry.resolved || entry.resolved.startsWith('https://registry.npmjs.org/')), 'Dependencies must resolve from the public npm registry');
 assert.equal(Object.keys(manifest.dependencies || {}).length, 0, 'SDK must not install Azure/TTS/demo dependencies');
 assert.ok(packed.files.every(({ path }) => /^(dist-sdk\/|README\.md$|LICENSE$|package\.json$|docs\/(?:SDK|LIVE2D)\.md$|CHANGELOG\.md$)/.test(path)), 'Unexpected files in package');
-assert.ok(!packed.files.some(({ path }) => /characters\/mira\/|niu-lai|pixel-portrait|mochi|(?:^|\/)three(?:[./]|$)|espeak|en_rules|\.env/.test(path)), 'Non-SDK assets in package');
+assert.ok(!packed.files.some(({ path }) => /characters\/(?:mira|arthur)\/|niu-lai|pixel-portrait|mochi|(?:^|\/)three(?:[./]|$)|espeak|en_rules|\.env/.test(path)), 'Non-SDK assets in package');
 for (const name of ['dist-sdk/index.js', 'dist-sdk/types/index.d.ts', 'dist-sdk/canvas.js', 'dist-sdk/types/canvas/index.d.ts', 'dist-sdk/audio-clip-processor.js', 'dist-sdk/characters/pixel-bot/body.png']) {
   assert.ok(packed.files.some(({ path }) => path === name), 'Missing package file: ' + name);
 }

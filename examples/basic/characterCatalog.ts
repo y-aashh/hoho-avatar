@@ -20,6 +20,8 @@ export function createCharacterCatalog(): Map<string, StudioCharacter> {
       label: 'Pixel Bot', defaultText: "Hey, I'm Pixel Bot. What's been the best part of your day?" },
     { id: 'mira', renderer: '2d', source: import.meta.env.BASE_URL + 'characters/mira/character.json',
       label: 'Mira', defaultText: "Hey, I'm Mira! What's sparked your curiosity today?" },
+    { id: 'arthur', renderer: '2d', source: import.meta.env.BASE_URL + 'characters/arthur/character.json',
+      label: 'Arthur', defaultText: "Hello, I'm Arthur. Shall we explore something fascinating?" },
   ];
   if (live2dConfig.modelUrl) {
     characters.push({ id: 'live2d', renderer: 'live2d', source: live2dConfig.modelUrl,

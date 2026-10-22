@@ -41,3 +41,4 @@ jobs:
           if-no-files-found: ignore
       - run: python skills/generate-talking-sprite-character/scripts/validate_character.py public/characters/pixel-bot/character.json
       - run: python skills/generate-talking-sprite-character/scripts/validate_character.py public/characters/mira/character.json
+      - run: python skills/generate-talking-sprite-character/scripts/validate_character.py public/characters/arthur/character.json

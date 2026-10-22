@@ -104,7 +104,7 @@ Only import the implementation your application uses. Canvas requires no rendere
 
 Avatar exposes capabilities, setState/getState, previewMouth/previewBlink, resize, resetView, setViewControlEnabled, start/stop and resetAudio alongside its audio methods. stop() pauses animation; stopAudio() releases owned audio. Previews work on both implementations. MotionController generates RenderFrame values and owns the only analysis, blink and animation loop.
 
-The Studio bundles Pixel Bot and Mira and accepts V1 sprite ZIP imports. The optional Live2D adapter accepts caller-owned Core/model assets; see [the Live2D guide](LIVE2D.md). Three.js, GLB import and Blender authoring have been removed.
+The Studio bundles Pixel Bot, Mira and Arthur and accepts V1 sprite ZIP imports. The optional Live2D adapter accepts caller-owned Core/model assets; see [the Live2D guide](LIVE2D.md). Three.js, GLB import and Blender authoring have been removed.
 
 Migration: use canvasRenderer({ character }) in createAvatar(canvas, { renderer }), or the optional live2dRenderer({ model, coreUrl }).
 

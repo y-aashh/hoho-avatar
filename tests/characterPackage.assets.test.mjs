@@ -1,16 +1,17 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 import { loadSpriteCharacterPackage } from "../examples/basic/characterPackage";
 
 describe("bundled character ZIP import", () => {
-  it.each(["pixel-bot", "mira"])("preserves %s image bytes", async (name) => {
+  it.each(["pixel-bot", "mira", "arthur"])("preserves %s image bytes", async (name) => {
     const directory = new URL(`../public/characters/${name}/`, import.meta.url);
     const files = Object.fromEntries(readdirSync(directory).filter(file => !file.endsWith('.zip')).map((file) => [
       `${name}/${file}`, new Uint8Array(readFileSync(new URL(file, directory))),
     ]));
-    // Exercise the actual published archive for Mira, without nesting it in itself.
-    const bytes = name === 'mira' ? new Uint8Array(readFileSync(new URL('mira.zip', directory))) : zipSync(files);
+    // Exercise delivered archives when available, without nesting them in themselves.
+    const archive = new URL(`${name}.zip`, directory);
+    const bytes = existsSync(archive) ? new Uint8Array(readFileSync(archive)) : zipSync(files);
     const blobs = [];
     const revoked = [];
     const loaded = await loadSpriteCharacterPackage({
