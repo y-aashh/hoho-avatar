@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 
 MOUTHS = ("closed", "small", "large", "wide", "round")
-REACTIONS = ("worried", "look_up", "impressed")
+REACTIONS = ("worried", "look_up", "impressed", "aha", "curious")
 
 
 def fail(message):

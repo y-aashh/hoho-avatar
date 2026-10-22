@@ -55,6 +55,16 @@ describe('Avatar SDK', () => {
     expect(() => avatar.resetReaction()).toThrow('destroyed');
     expect(() => avatar.setIdleMotion(false)).toThrow('destroyed');
   });
+  it.each(['aha', 'curious'] as const)('forwards %s options through the established API', async name => {
+    const { avatar, sprite } = setup();
+    const options = { duration: 1.8, intensity: 0.7, holdDuration: 2, interrupt: false };
+    avatar.triggerReaction(name, options);
+    expect(sprite.triggerReaction).toHaveBeenCalledExactlyOnceWith(name, options);
+    avatar.resetAudio(); avatar.stopAudio();
+    expect(sprite.resetReaction).not.toHaveBeenCalled();
+    await avatar.destroy();
+    expect(() => avatar.triggerReaction(name)).toThrow('destroyed');
+  });
 
   it('cancels delayed file decoding when switching to microphone capture', async () => {
     const { avatar, sprite, decode, contexts, worklets, tracks } = setup();

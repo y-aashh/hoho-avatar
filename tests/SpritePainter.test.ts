@@ -9,7 +9,7 @@ function setup(style: 'pixel' | 'smooth') {
   const calls: string[] = [];
   const context = { imageSmoothingEnabled: false, imageSmoothingQuality: 'low', globalAlpha: 1,
     clearRect: vi.fn(() => calls.push('clear')), save: vi.fn(() => calls.push('save')), restore: vi.fn(() => calls.push('restore')),
-    translate: vi.fn(), rotate: vi.fn(), drawImage: vi.fn((im) => calls.push(im.name ?? 'blend')) };
+    translate: vi.fn(), rotate: vi.fn(), scale: vi.fn(), drawImage: vi.fn((im) => calls.push(im.name ?? 'blend')) };
   const character: LoadedSpriteCharacter = { definition: { version: 1, renderStyle: style, canvas: { width: 512, height: 512 }, body: { src: 'body.png' },
     mouth: { anchor: { x: 256.25, y: 330.25 }, sprites: { closed: '', small: '', large: '', wide: '', round: '' } },
     eyes: { anchor: { x: 256, y: 200 }, sprites: { open: '', closed: '' } },
@@ -20,7 +20,7 @@ function setup(style: 'pixel' | 'smooth') {
     reactions: { worried: { eyes: image('worried'), eyebrows: image('worried-brows'), effect: image('sweat') }, impressed: { mouth: image('smile') } } };
   const canvas = { width: 0, height: 0, getContext: () => context } as unknown as HTMLCanvasElement;
   const painter = new SpritePainter(canvas, character);
-  return { painter, context, calls };
+  return { painter, context, calls, character };
 }
 const motion = { timestamp: 0, speaking: false, energy: 0, mouth: MouthState.Closed };
 describe('SpritePainter reactions', () => {
@@ -69,5 +69,68 @@ describe('SpritePainter reactions', () => {
     expect(context.imageSmoothingEnabled).toBe(style === 'smooth');
     if (style === 'smooth') expect(context.imageSmoothingQuality).toBe('high');
     expect(context.drawImage.mock.calls.at(-1)!.slice(1)).toEqual(style === 'smooth' ? [246.25, 325.25] : [246, 325]);
+  });
+  it.each(['aha', 'curious'] as const)('reuses compatible art for %s while preserving speech, blink and preview', name => {
+    const { painter, calls, context, character } = setup('smooth');
+    character.reactions!.impressed!.eyes = image('bright-eyes');
+    character.reactions!.impressed!.eyebrows = image('raised-brows');
+    character.definition.reactions!.impressed!.eyesAnchor = { x: 260, y: 199 };
+    character.reactions!.look_up = { eyes: image('up-eyes') };
+    character.definition.reactions!.look_up = { eyes: 'up.png', eyesAnchor: { x: 262, y: 197 } };
+    character.definition.reactions!.impressed!.eyebrowsAnchor = { x: 270, y: 178 };
+    const r = new ReactionController(); r.triggerReaction(name, { duration: 1 });
+    const reaction = r.update(0.5);
+    const frame = { motion, eyesClosed: false, state: CharacterState.Idle, timestamp: 0, deltaSeconds: 0, reaction };
+    painter.renderFrame(frame);
+    expect(calls).toEqual(['clear', 'save', 'body', ...(name === 'aha' ? ['bright-eyes', 'raised-brows', 'smile'] : ['up-eyes', 'raised-brows', 'closed']), 'restore']);
+    if (name === 'aha') expect(context.drawImage).toHaveBeenCalledWith(character.reactions!.impressed!.eyes, 250, 194);
+    else expect(context.drawImage).toHaveBeenCalledWith(character.reactions!.look_up!.eyes, 252, 192);
+    expect(context.drawImage).toHaveBeenCalledWith(character.reactions!.impressed!.eyebrows, 260, 173);
+    calls.length = 0;
+    painter.renderFrame({ ...frame, motion: { ...motion, speaking: true, mouth: MouthState.Large }, eyesClosed: true });
+    expect(calls).toContain('blink'); expect(calls).toContain('large'); expect(calls).not.toContain('smile');
+    expect(calls).not.toContain('bright-eyes'); expect(calls).not.toContain('eyes'); expect(calls).not.toContain('up-eyes');
+    calls.length = 0;
+    painter.renderFrame({ ...frame, mouthPreview: true });
+    expect(calls).toContain('closed'); expect(calls).not.toContain('smile');
+  });
+  it('prefers explicit Curious facial art, then reuses available expressions before neutral', () => {
+    const { painter, character, calls, context } = setup('smooth');
+    character.reactions!.curious = { eyes: image('curious-eyes'), eyebrows: image('curious-brows') };
+    character.definition.reactions!.curious = { eyes: 'curious.png', eyesAnchor: { x: 259, y: 201 }, eyebrows: 'curious-brows.png' };
+    character.reactions!.impressed!.eyes = image('bright-eyes');
+    character.reactions!.impressed!.eyebrows = image('raised-brows');
+    const c = new ReactionController(); c.triggerReaction('curious');
+    const reaction = c.update(0.9);
+    const frame = { motion, eyesClosed: false, state: CharacterState.Idle, timestamp: 0, deltaSeconds: 0, reaction };
+    painter.renderFrame(frame);
+    expect(calls).toEqual(['clear', 'save', 'body', 'curious-eyes', 'curious-brows', 'closed', 'restore']);
+    expect(context.drawImage).toHaveBeenCalledWith(character.reactions!.curious.eyes, 249, 196);
+    delete character.reactions!.curious;
+    calls.length = 0; painter.renderFrame(frame);
+    expect(calls).toEqual(['clear', 'save', 'body', 'bright-eyes', 'raised-brows', 'closed', 'restore']);
+    delete character.reactions!.impressed;
+    calls.length = 0; painter.renderFrame(frame);
+    expect(calls).toEqual(['clear', 'save', 'body', 'eyes', 'brows', 'closed', 'restore']);
+  });
+  it.each(['smooth', 'pixel'] as const)('scales Curious uniformly around the shared pivot and restores %s transforms every frame', style => {
+    const { painter, context } = setup(style);
+    const c = new ReactionController(); c.triggerReaction('curious', { duration: 1 });
+    const frame = { motion, eyesClosed: false, state: CharacterState.Idle, timestamp: 0, deltaSeconds: 0, reaction: c.update(0.5) };
+    painter.renderFrame(frame); painter.renderFrame(frame);
+    expect(context.scale.mock.calls).toEqual([[1.018, 1.018], [1.018, 1.018]]);
+    expect(context.save).toHaveBeenCalledTimes(2); expect(context.restore).toHaveBeenCalledTimes(2);
+    expect(context.translate.mock.calls[0]).toEqual(style === 'smooth' ? [257.5, 357.7] : [258, 358]);
+    expect(context.translate.mock.calls[1]).toEqual([-256, -358.4]);
+  });
+  it.each(['aha', 'curious'] as const)('animates %s on legacy art without reaction or eyebrow layers', name => {
+    const { painter, character, calls } = setup('pixel');
+    delete character.reactions; delete character.definition.reactions;
+    delete character.eyebrows; delete character.definition.eyebrows;
+    const c = new ReactionController(); c.triggerReaction(name);
+    const reaction = c.update(0.5);
+    painter.renderFrame({ motion, eyesClosed: false, state: CharacterState.Idle, timestamp: 0, deltaSeconds: 0, reaction });
+    expect(calls).toEqual(['clear', 'save', 'body', 'eyes', 'closed', 'restore']);
+    expect(reaction.rotation).not.toBe(0);
   });
 });

@@ -1,4 +1,4 @@
-import type { ReactionControllerOptions } from '../animation/ReactionController';
+import { REACTIONS, type ReactionControllerOptions } from '../animation/ReactionController';
 import type { AvatarRenderer, RendererCapabilities, RenderFrame } from '../core/renderer';
 import type { SpriteCharacterDefinition } from './SpriteCharacterDefinition';
 import { MouthState, MOUTH_STATES } from '../core/MouthState';
@@ -23,7 +23,7 @@ export class CanvasRenderer implements AvatarRenderer {
       this.loading.signal.throwIfAborted();
       this.drawing = new SpritePainter(canvas, character);
       this.reactionOptions = { idleSway: character.definition.animation?.idleSway, idleMotion: Boolean(character.definition.animation?.idleSway) };
-      this.features = { mouth: MOUTH_STATES, blink: Boolean(character.eyes), viewControl: false, reactions: ['worried', 'look_up', 'impressed'], idleMotion: true };
+      this.features = { mouth: MOUTH_STATES, blink: Boolean(character.eyes), viewControl: false, reactions: REACTIONS, idleMotion: true };
       if (this.canvas.style) this.canvas.style.imageRendering = character.definition.renderStyle === 'smooth' ? 'auto' : 'pixelated';
       this.reset();
     }).catch((error) => { this.destroy(); throw error; });

@@ -28,6 +28,8 @@ export class SpritePainter {
       ctx.save();
       ctx.translate(round(pivot.x + (pose.position.x + pose.idle.x) * sx), round(pivot.y + (pose.position.y + pose.idle.y) * sy + bounce));
       ctx.rotate((pose.rotation + pose.idle.rotation) * Math.PI / 180);
+      const scale = pose.scale ?? 1;
+      if (scale !== 1) ctx.scale(scale, scale);
       ctx.translate(-pivot.x, -pivot.y);
     }
     try {
@@ -56,8 +58,16 @@ export class SpritePainter {
         if (weight > strongest) { strongest = weight; expression = name; }
       }
       const feature = (key: 'eyes' | 'eyebrows' | 'mouth', neutral: HTMLImageElement | undefined, anchor: { x: number; y: number }) => {
-        const image = expression ? c.reactions?.[expression]?.[key] : undefined;
-        const override = expression ? d.reactions?.[expression] : undefined;
+        // Aha shares the delighted face. Curious glances up with raised brows,
+        // keeping its normal mouth. Select one sprite per feature, never stack faces.
+        // Resolve the image AND its anchor together, including explicit overrides.
+        const fallback = expression === 'aha' ? 'impressed'
+          : expression === 'curious' && key === 'eyes'
+            ? c.reactions?.look_up?.eyes ? 'look_up' : 'impressed'
+          : expression === 'curious' && key === 'eyebrows' ? 'impressed' : undefined;
+        const source = expression && c.reactions?.[expression]?.[key] ? expression : fallback;
+        const image = source ? c.reactions?.[source]?.[key] : undefined;
+        const override = source ? d.reactions?.[source] : undefined;
         draw(image ?? neutral, image ? override?.[`${key}Anchor`] ?? anchor : anchor);
       };
       if (d.eyes && c.eyes) {

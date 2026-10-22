@@ -4,7 +4,8 @@ import { CharacterState } from '../src';
 import type { AvatarRenderer } from '../src';
 
 function setup() {
-  vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
+  let draw!: FrameRequestCallback;
+  vi.stubGlobal('requestAnimationFrame', vi.fn(callback => { draw = callback; return 1; }));
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
   const canvas = { cloneNode: vi.fn(), replaceWith: vi.fn() };
   canvas.cloneNode.mockReturnValue(canvas);
@@ -15,9 +16,27 @@ function setup() {
   };
   const factory = vi.fn(() => renderer);
   const stage = new CharacterStage(canvas as unknown as HTMLCanvasElement, mounted, vi.fn());
-  return { stage, mounted, renderer, factory, canvas };
+  return { stage, mounted, renderer, factory, canvas, tick: (now: number) => draw(now) };
 }
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+it.each(['aha', 'curious'] as const)('clears active %s state when switching or disposing the mounted character', async name => {
+  vi.spyOn(performance, 'now').mockReturnValue(0);
+  const { stage, factory, renderer, tick } = setup();
+  await stage.ensure('old', async () => factory, 48_000, CharacterState.Idle);
+  const old = stage.avatar!;
+  old.triggerReaction(name, { holdDuration: 2 }); tick(500);
+  expect(renderer.render).toHaveBeenLastCalledWith(expect.objectContaining({ reaction: expect.objectContaining({ expression: name }) }));
+  const next = { ...renderer, render: vi.fn(), destroy: vi.fn() };
+  await stage.ensure('new', async () => () => next, 48_000, CharacterState.Idle);
+  expect(renderer.destroy).toHaveBeenCalledOnce();
+  expect(() => old.triggerReaction(name)).toThrow('destroyed');
+  tick(500);
+  expect(next.render).toHaveBeenLastCalledWith(expect.objectContaining({ reaction: expect.objectContaining({ expression: undefined, layers: [], scale: 1 }) }));
+  stage.avatar!.triggerReaction(name);
+  stage.dispose();
+  expect(next.destroy).toHaveBeenCalledOnce();
+  expect(cancelAnimationFrame).toHaveBeenCalled();
+});
 it('reuses a character for new audio and applies the latest rate/state', async () => {
   const { stage, factory, canvas, mounted } = setup();
   await stage.ensure('pixel-bot', async () => factory, 48_000, CharacterState.Idle);

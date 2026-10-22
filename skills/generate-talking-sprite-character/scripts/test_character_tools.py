@@ -51,6 +51,13 @@ class CharacterToolsTest(unittest.TestCase):
             for name in reaction:
                 for progress in (0, 0.4, 0.85):
                     self.assertEqual(render_state(config, reaction=name, progress=progress).size, (1024, 768))
+            # Both new behaviors render without declaring any new asset metadata.
+            neutral = render_state(config)
+            for name in ('aha', 'curious'):
+                peak = render_state(config, reaction=name, progress=0.5)
+                self.assertNotEqual(peak.tobytes(), neutral.tobytes())
+                self.assertEqual(render_state(config, reaction=name, progress=1).tobytes(), neutral.tobytes())
+                validate_definition({**data, 'reactions': {name: {'mouth': 'mouth-wide.png'}}}, root)
             subprocess.run([sys.executable, str(SCRIPTS / "render_test_matrix.py"), str(config), "--out", str(root / "matrix.png")], check=True, capture_output=True)
             self.assertTrue((root / "matrix-reactions.png").is_file())
             self.assertTrue((root / "matrix-closeups.png").is_file())
