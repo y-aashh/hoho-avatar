@@ -1,5 +1,5 @@
 import { MouthState, MOUTH_STATES } from '../../src';
-import type { Avatar } from '../../src';
+import type { ReactionName, Avatar } from '../../src';
 import { element } from './studioDom';
 
 const hints: Record<MouthState, string> = {
@@ -49,6 +49,22 @@ export class StageView {
   private unsubscribe?: () => void;
 
   constructor() {
+    const duration = element<HTMLInputElement>('#reactionDuration');
+    const holdDuration = element<HTMLInputElement>('#reactionHoldDuration');
+    const intensity = element<HTMLInputElement>('#reactionIntensity');
+    const idle = element<HTMLInputElement>('#idleSway');
+    const reactionEvents = { signal: this.events.signal };
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-reaction]')) {
+      button.addEventListener('click', () => {
+        if (!duration.reportValidity() || !holdDuration.reportValidity() || !intensity.reportValidity()) return;
+        this.avatar?.triggerReaction(button.dataset.reaction as ReactionName, {
+          duration: duration.value ? Number(duration.value) : undefined, intensity: Number(intensity.value),
+          holdDuration: Number(holdDuration.value),
+        });
+      }, reactionEvents);
+    }
+    element('#resetReaction').addEventListener('click', () => this.avatar?.resetReaction(), reactionEvents);
+    idle.addEventListener('change', () => this.avatar?.setIdleMotion(idle.checked), reactionEvents);
     const options = { signal: this.events.signal };
     const updateViewport = () => document.documentElement.style.setProperty(
       '--studio-viewport-height', `${window.visualViewport?.height ?? window.innerHeight}px`,
@@ -80,6 +96,13 @@ export class StageView {
   show(avatar: Avatar, live2d: boolean): void {
     this.unsubscribe?.();
     this.avatar = avatar;
+    element<HTMLFieldSetElement>('#reactionControls').disabled = !avatar.capabilities.reactions?.length;
+    const idle = element<HTMLInputElement>('#idleSway');
+    idle.checked = false;
+    avatar.setIdleMotion(false);
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-reaction]')) {
+      button.disabled = !avatar.capabilities.reactions?.includes(button.dataset.reaction as ReactionName);
+    }
     this.selectedMouth = undefined;
     clearTimeout(this.blinkTimer);
     this.blink.setAttribute('aria-pressed', 'false');
@@ -100,6 +123,15 @@ export class StageView {
     });
   }
 
+  clear(): void {
+    this.unsubscribe?.(); this.unsubscribe = undefined;
+    this.avatar = undefined;
+    clearTimeout(this.blinkTimer);
+    element<HTMLFieldSetElement>('#reactionControls').disabled = true;
+    this.blink.disabled = true;
+    for (const { button } of this.mouthButtons) button.disabled = true;
+  }
+
   private updateMeter(energy: number): void {
     const active = Math.round(energy * this.barElements.length);
     this.barElements.forEach((bar, index) => bar.classList.toggle('active', index < active));
@@ -110,8 +142,6 @@ export class StageView {
 
   dispose(): void {
     this.events.abort();
-    clearTimeout(this.blinkTimer);
-    this.unsubscribe?.();
-    this.avatar = undefined;
+    this.clear();
   }
 }

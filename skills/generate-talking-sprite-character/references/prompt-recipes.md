@@ -42,3 +42,11 @@ Avoid: ambiguous speaker, mouth pixels on the speaker, antialiasing, gradients, 
 Always state invariants again when iterating: preserve identity, composition, colors, open eyes, and blank mouth region; change only the named defect.
 
 Expression layers are judged against the source concept, any references, and the final body—not against a universal template. Match the artwork's eye geometry, eyelid weight, lip colors, tooth visibility, tooth tone, pixel density, and contrast. Teeth are optional per mouth state; include them only when they improve articulation without breaking the character's style.
+
+## Reaction prompts and gaze consistency
+
+Build reaction prompts with `scripts/build_reaction_prompts.py --render-style pixel|smooth --out <out>/reaction-plan.json` before requesting Worried, Look Up or Impressed artwork. Use the generated prompts with the available image-generation capability; the Python script itself makes no image API calls.
+
+The shared default is **screen-left / viewer-left**, explicitly the left edge of the image. Worried moves both pupils sideways-left; Look Up moves both pupils diagonally upper-left. Preserve eyelids, eye sockets, skin, pose and framing. An approved reaction may be supplied as a gaze-direction reference for the other; label that reference separately from the edit target. Never mirror a portrait or full eye layer to repair gaze. Only an explicit user request may override the shared direction for both reactions.
+
+Keep `reaction-plan.json` alongside `character.json` for the review sheet to read. Compare `*-gaze.png` and actual browser composites before packaging; correct inconsistent pupil directions even when asset validation passes. A valid manifest does not establish the gaze of PNG artwork.

@@ -32,7 +32,7 @@ export class Studio {
     const uploadStatus = element('#uploadStatus');
     this.stage = new CharacterStage(element<HTMLCanvasElement>('#avatar'),
       (avatar) => this.view.show(avatar, this.characters.selected.renderer === 'live2d'),
-      (error) => { uploadStatus.textContent = error.message; });
+      (error) => { uploadStatus.textContent = error.message; }, () => this.view.clear());
     this.characters = new CharacterLibrary({
       stage: this.stage,
       currentAudio: () => this.currentAudio,

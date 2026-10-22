@@ -1,3 +1,4 @@
+import { ReactionController, type ReactionName, type ReactionOptions, type ReactionControllerOptions } from '../animation/ReactionController';
 import { BlinkController } from '../animation/BlinkController';
 import { MouthClassifier } from '../audio/MouthClassifier';
 import { PCMAnalyzer } from '../audio/PCMAnalyzer';
@@ -11,6 +12,7 @@ export class MotionController {
   readonly ready: Promise<void>;
   private analyzer: PCMAnalyzer;
   private readonly classifier = new MouthClassifier();
+  private reaction = new ReactionController();
   private readonly blink = new BlinkController();
   private readonly listeners = new Set<(frame: MotionFrame) => void>();
   private animationFrame?: number;
@@ -21,10 +23,13 @@ export class MotionController {
   private mouthOverride?: MouthState;
   private blinkOverride = false;
   private motion: MotionFrame = { timestamp: 0, speaking: false, energy: 0, mouth: MouthState.Closed };
-  constructor(private readonly backend: AvatarRenderer, sampleRate = 48_000, private readonly onError?: (error: Error) => void) {
+  constructor(private readonly backend: AvatarRenderer, sampleRate = 48_000, private readonly onError?: (error: Error) => void, reactionOptions?: ReactionControllerOptions) {
     this.validateRate(sampleRate); this.analyzer = new PCMAnalyzer({ sampleRate });
-    this.ready = backend.ready.then(() => this.assertActive()).catch((error) => { this.destroy(); throw error; });
+    this.ready = backend.ready.then(() => { this.assertActive(); this.reaction = new ReactionController({ ...backend.reactionOptions, ...reactionOptions }); }).catch((error) => { this.destroy(); throw error; });
   }
+  triggerReaction(name: ReactionName, options?: ReactionOptions): void { this.assertActive(); this.reaction.triggerReaction(name, options); }
+  setIdleMotion(enabled: boolean): void { this.assertActive(); this.reaction.setIdleMotion(enabled); }
+  resetReaction(): void { this.assertActive(); this.reaction.resetReaction(); }
   get capabilities(): RendererCapabilities { return this.backend.capabilities; }
   resize(): void { this.assertActive(); this.backend.resize(); }
   resetView(): void { this.assertActive(); this.backend.resetView(); }
@@ -68,9 +73,12 @@ export class MotionController {
       if (!this.running || this.destroyed) return;
       this.animationFrame = undefined;
       const motion = this.mouthOverride ? { ...this.motion, mouth: this.mouthOverride } : this.motion;
+      const elapsedSeconds = Math.max(0, (now - this.lastTime) / 1000);
+      const deltaSeconds = Math.min(0.1, elapsedSeconds);
+      const reaction = this.reaction.update(elapsedSeconds, motion.energy);
       try {
-        this.backend.render({ motion, eyesClosed: this.blinkOverride || this.blink.isClosed(now), state: this.state,
-          timestamp: now, deltaSeconds: Math.max(0, Math.min(0.1, (now - this.lastTime) / 1000)) });
+        this.backend.render({ motion, reaction, mouthPreview: this.mouthOverride !== undefined, eyesClosed: this.blinkOverride || this.blink.isClosed(now), state: this.state,
+          timestamp: now, deltaSeconds });
       } catch (error) {
         this.reportError(error);
         return;
@@ -97,7 +105,7 @@ export class MotionController {
   }
   destroy(): void {
     if (this.destroyed) return;
-    this.destroyed = true; this.stop(); this.analyzer.reset(); this.motion = this.classifier.reset();
+    this.destroyed = true; this.stop(); this.reaction.destroy(); this.analyzer.reset(); this.motion = this.classifier.reset();
     try { this.emit(); } finally { this.listeners.clear(); this.backend.destroy(); }
   }
   protected assertActive(): void { if (this.destroyed) throw new Error('MotionController has been destroyed'); }

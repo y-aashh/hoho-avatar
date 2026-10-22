@@ -24,6 +24,13 @@ const asset = (path) => 'new URL(' + JSON.stringify('./pixel-bot/' + path) + ', 
 lines.push('character.body.src = ' + asset(character.body.src) + ';');
 for (const state of Object.keys(character.mouth.sprites)) lines.push('character.mouth.sprites.' + state + ' = ' + asset(character.mouth.sprites[state]) + ';');
 for (const state of Object.keys(character.eyes.sprites)) lines.push('character.eyes.sprites.' + state + ' = ' + asset(character.eyes.sprites[state]) + ';');
+if (character.eyebrows) lines.push('character.eyebrows.src = ' + asset(character.eyebrows.src) + ';');
+for (const [name, reaction] of Object.entries(character.reactions ?? {})) {
+  for (const key of ['eyes', 'eyebrows', 'mouth']) {
+    if (reaction[key]) lines.push('character.reactions.' + name + '.' + key + ' = ' + asset(reaction[key]) + ';');
+  }
+  if (reaction.effect) lines.push('character.reactions.' + name + '.effect.src = ' + asset(reaction.effect.src) + ';');
+}
 lines.push('export default character;');
 await writeFile('dist-sdk/characters/pixel-bot.js', lines.join('\n') + '\n');
 await writeFile('dist-sdk/characters/pixel-bot.d.ts', [

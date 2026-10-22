@@ -166,6 +166,14 @@ export async function loadSpriteCharacterPackage(file: PackageFile, objectUrls: 
   try {
     const loadedDefinition: SpriteCharacterDefinition = {
       ...definition,
+      eyebrows: definition.eyebrows ? { ...definition.eyebrows, src: createAssetUrl(definition.eyebrows.src) } : undefined,
+      reactions: definition.reactions ? Object.fromEntries(Object.entries(definition.reactions).map(([name, reaction]) => [name, {
+        ...reaction,
+        eyes: reaction.eyes ? createAssetUrl(reaction.eyes) : undefined,
+        eyebrows: reaction.eyebrows ? createAssetUrl(reaction.eyebrows) : undefined,
+        mouth: reaction.mouth ? createAssetUrl(reaction.mouth) : undefined,
+        effect: reaction.effect ? { ...reaction.effect, src: createAssetUrl(reaction.effect.src) } : undefined,
+      }])) : undefined,
       body: { ...definition.body, src: createAssetUrl(definition.body.src) },
       mouth: {
         ...definition.mouth,

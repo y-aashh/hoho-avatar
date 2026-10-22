@@ -16,6 +16,6 @@ export interface AudioFeatures {
   zeroCrossingRate: number;
   /** Zero-crossing-derived frequency estimate in Hz; not a spectral centroid. */
   estimatedFrequencyHz: number;
-  /** Heuristic 0..1 score derived from zero crossings; not spectral band power. */
+  /** Sample-rate-normalized 0..1 zero-crossing heuristic; not a phoneme or spectral measurement. */
   roundnessScore: number;
 }

@@ -12,7 +12,7 @@ export class CharacterStage {
   private state: CharacterState = CharacterState.Idle;
 
   constructor(private canvas: HTMLCanvasElement, private readonly mounted: (avatar: Avatar) => void,
-    private readonly onError: (error: Error) => void) {}
+    private readonly onError: (error: Error) => void, private readonly unmounted: () => void = () => {}) {}
 
   get isLoading(): boolean { return this.pending !== undefined; }
 
@@ -54,6 +54,7 @@ export class CharacterStage {
   private disposeCharacter(): void {
     this.loading?.abort(); this.loading = undefined; this.pending = undefined;
     const avatar = this.avatar; this.avatar = undefined;
+    this.unmounted();
     void avatar?.destroy().catch(this.onError);
   }
 }

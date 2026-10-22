@@ -343,3 +343,11 @@ h1 > span { color: #ffb09c; font-family: Georgia, 'Times New Roman', serif; font
 @media(min-width:851px) { .character-list { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); } }
 @media(max-width:850px) { .model-tools { order: 3; width: 100%; } .stage-wrap[data-renderer='3d'] #avatar { top: 8px; height: calc(100% - 16px); } }
 @media(max-width:850px) { .stage-wrap[data-renderer='live2d'] #avatar { top: 8px; height: calc(100% - 16px); } .live2d-credit { order: 4; } }
+
+.reaction-controls { margin: 12px 0; padding: 12px 0; border: 0; min-width: 0; }
+.reaction-controls legend { font-size: 13px; font-weight: 600; }
+.reaction-settings { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 10px; }
+.reaction-settings label { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+.reaction-settings input[type="number"] { width: 76px; padding: 5px; }
+.reaction-settings input[type="range"] { width: 85px; }
+.reaction-controls:disabled { opacity: .5; }

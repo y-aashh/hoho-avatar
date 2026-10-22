@@ -21,12 +21,21 @@ describe("bundled character ZIP import", () => {
       revoke: (url) => revoked.push(url),
     });
     expect(loaded.name).toBe(name);
-    const imagePaths = ["body.png", ...["closed", "small", "large", "wide", "round"].map((state) => `mouth-${state}.png`), "eyes-open.png", "eyes-closed.png"];
-    expect(blobs).toHaveLength(imagePaths.length);
-    for (const [index, path] of imagePaths.entries()) {
+    const original = JSON.parse(readFileSync(new URL('character.json', directory), 'utf8'));
+    const pairs = [];
+    const collect = (before, after) => {
+      for (const [key, value] of Object.entries(before)) {
+        if (typeof value === 'string' && value.endsWith('.png')) pairs.push([value, after[key]]);
+        else if (value && typeof value === 'object') collect(value, after[key]);
+      }
+    };
+    collect(original, loaded.definition);
+    expect(blobs).toHaveLength(pairs.length);
+    for (const [path, url] of pairs) {
+      const index = Number(url.replace('blob:test-', '')) - 1;
       expect(new Uint8Array(await blobs[index].arrayBuffer())).toEqual(files[`${name}/${path}`]);
     }
     loaded.dispose();
-    expect(revoked).toHaveLength(imagePaths.length);
+    expect(revoked).toHaveLength(pairs.length);
   });
 });
