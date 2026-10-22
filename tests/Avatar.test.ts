@@ -44,9 +44,9 @@ describe('Avatar SDK', () => {
 
   it('forwards public reactions and guards them after destruction', async () => {
     const { avatar, sprite } = setup();
-    avatar.triggerReaction('look_up', { duration: 1.2, intensity: 0.8 });
+    avatar.triggerReaction('look_up', { duration: 1.2, holdDuration: 2, intensity: 0.8 });
     avatar.setIdleMotion(true); avatar.resetReaction();
-    expect(sprite.triggerReaction).toHaveBeenCalledWith('look_up', { duration: 1.2, intensity: 0.8 });
+    expect(sprite.triggerReaction).toHaveBeenCalledWith('look_up', { duration: 1.2, holdDuration: 2, intensity: 0.8 });
     expect(sprite.setIdleMotion).toHaveBeenCalledWith(true);
     expect(sprite.resetReaction).toHaveBeenCalledOnce();
     avatar.stopAudio(); expect(sprite.resetReaction).toHaveBeenCalledOnce();

@@ -102,6 +102,25 @@ describe('shared motion controller', () => {
     expect(() => controller.triggerReaction('worried')).toThrow('destroyed');
   });
 
+  it('keeps a final pose held while audio resets and automatic blinking continue', async () => {
+    vi.spyOn(performance, 'now').mockReturnValue(0);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const { controller, renderer, tick } = setup(); await controller.ready;
+    controller.start(); controller.triggerReaction('worried', { duration: 1, holdDuration: 2 });
+    tick(800);
+    const held = renderer.render.mock.calls.at(-1)![0].reaction!;
+    controller.pushPCM(new Float32Array(1440).fill(0.3));
+    tick(1000);
+    expect(renderer.render.mock.calls.at(-1)![0].motion.speaking).toBe(true);
+    controller.resetAudio(); tick(2300);
+    const frame = renderer.render.mock.calls.at(-1)![0];
+    expect(frame.motion.mouth).toBe('closed');
+    expect(frame.eyesClosed).toBe(true);
+    expect(frame.reaction!.layers).toEqual(held.layers);
+    tick(3100); expect(renderer.render.mock.calls.at(-1)![0].reaction!.layers).toEqual([]);
+    controller.destroy();
+  });
+
   it('passes every shared state to the renderer and rejects invalid values without changing state', async () => {
     const { controller, renderer, tick } = setup();
     await controller.ready;

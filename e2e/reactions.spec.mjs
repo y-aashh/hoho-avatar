@@ -7,11 +7,21 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto('./');
+    await page.evaluate(async source => {
+      const { Avatar } = await import(source + 'core/Avatar.ts');
+      const trigger = Avatar.prototype.triggerReaction;
+      Avatar.prototype.triggerReaction = function (name, options) {
+        window.lastReactionOptions = options;
+        return trigger.call(this, name, options);
+      };
+    }, '/hoho-avatar/@fs' + process.cwd() + '/src/');
     await page.getByRole('button', { name: /Pixel Bot/ }).click();
     await expect(page.locator('#reactionControls')).toBeEnabled();
     await page.locator('#reactionDuration').fill('1.2');
+    await page.getByLabel('Hold duration (seconds)', { exact: true }).fill('2');
     await page.locator('#idleSway').check();
     for (const name of ['Worried', 'Look Up', 'Impressed']) await page.getByRole('button', { name, exact: true }).click();
+    expect(await page.evaluate(() => window.lastReactionOptions)).toMatchObject({ duration: 1.2, holdDuration: 2 });
     await page.locator('#sampleAudioButton').click();
     await page.getByRole('button', { name: 'Worried', exact: true }).click();
     await expect(page.locator('#statusText')).toHaveText('AUDIO LIVE');
@@ -74,4 +84,40 @@ test('captures deterministic Canvas reaction poses and verifies alpha and smooth
     return { smoothing: canvas.getContext('2d').imageSmoothingEnabled, quality: canvas.getContext('2d').imageSmoothingQuality, css: canvas.style.imageRendering, width: canvas.width };
   }, source);
   expect(smooth).toEqual({ smoothing: true, quality: 'high', css: 'auto', width: 1024 });
+});
+
+test('holds the final eyes and sweat pixels for two seconds before recovery', async ({ page }) => {
+  await page.goto('./');
+  const result = await page.evaluate(async source => {
+    const { CanvasRenderer } = await import(source + 'canvas/CanvasRenderer.ts');
+    const { ReactionController } = await import(source + 'animation/ReactionController.ts');
+    const canvas = document.createElement('canvas'); canvas.id = 'holdReview';
+    canvas.style.cssText = 'width:512px;height:512px;display:block;background:transparent';
+    document.body.replaceChildren(canvas);
+    const renderer = new CanvasRenderer(canvas, { character: '/hoho-avatar/characters/pixel-bot/character.json' });
+    await renderer.ready;
+    const controller = new ReactionController();
+    const draw = delta => {
+      const reaction = controller.update(delta);
+      renderer.render({ reaction, motion: { timestamp: 0, speaking: false, energy: 0, mouth: 'closed' }, eyesClosed: false, state: 'idle', timestamp: 0, deltaSeconds: delta });
+      return { reaction, pixels: canvas.toDataURL() };
+    };
+    const neutral = draw(0);
+    controller.triggerReaction('worried', { duration: 1, holdDuration: 2 });
+    const start = draw(0.68), middle = draw(1), last = draw(0.9999);
+    const recovering = draw(0.16), end = draw(0.1602);
+    window.holdReview = { draw, controller, renderer };
+    controller.triggerReaction('worried', { duration: 1, holdDuration: 2 }); draw(0.68);
+    return {
+      sameThroughoutHold: start.pixels === middle.pixels && middle.pixels === last.pixels,
+      differsFromNeutral: start.pixels !== neutral.pixels,
+      effect: start.reaction.layers[0].effect,
+      recovers: recovering.reaction.weight < last.reaction.weight,
+      returnedToNeutral: end.pixels === neutral.pixels,
+      ended: end.reaction.layers.length === 0,
+    };
+  }, '/hoho-avatar/@fs' + process.cwd() + '/src/');
+  expect(result).toEqual({ sameThroughoutHold: true, differsFromNeutral: true, effect: { opacity: 1, y: 45 }, recovers: true, returnedToNeutral: true, ended: true });
+  await page.locator('#holdReview').screenshot({ path: 'working/reaction-review/hold-final.png' });
+  await page.evaluate(() => window.holdReview.renderer.destroy());
 });

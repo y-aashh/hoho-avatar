@@ -50,14 +50,16 @@ export class StageView {
 
   constructor() {
     const duration = element<HTMLInputElement>('#reactionDuration');
+    const holdDuration = element<HTMLInputElement>('#reactionHoldDuration');
     const intensity = element<HTMLInputElement>('#reactionIntensity');
     const idle = element<HTMLInputElement>('#idleSway');
     const reactionEvents = { signal: this.events.signal };
     for (const button of document.querySelectorAll<HTMLButtonElement>('[data-reaction]')) {
       button.addEventListener('click', () => {
-        if (!duration.reportValidity() || !intensity.reportValidity()) return;
+        if (!duration.reportValidity() || !holdDuration.reportValidity() || !intensity.reportValidity()) return;
         this.avatar?.triggerReaction(button.dataset.reaction as ReactionName, {
           duration: duration.value ? Number(duration.value) : undefined, intensity: Number(intensity.value),
+          holdDuration: Number(holdDuration.value),
         });
       }, reactionEvents);
     }

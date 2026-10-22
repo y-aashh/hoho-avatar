@@ -182,6 +182,7 @@ Run `npm run setup:demo` after installing repository dependencies. `npm run dev`
 
 ```ts
 avatar.triggerReaction('worried');
+avatar.triggerReaction('worried', { duration: 1.4, holdDuration: 2 });
 avatar.triggerReaction('look_up', { duration: 1.2, intensity: 0.8 });
 avatar.triggerReaction('impressed', { interrupt: false });
 avatar.setIdleMotion(true);
@@ -190,6 +191,8 @@ avatar.setIdleMotion(false); // damped settling
 ```
 
 Durations are seconds; intensity is finite in [0,1]. Unknown names and invalid options throw. Calls after destruction follow the existing API and throw a destroyed error. Creation accepts `reactions: { seed: 42, idleMotion: true, idleSway: { rotationDeg: 0.9 } }`. Sway is opt-in unless the character declares idle settings. Reactions use the existing frame loop and survive `stopAudio()` / `resetAudio()`. Speech and manual mouth previews take priority over reaction mouths; automatic/manual blinks take priority over reaction eyes.
+
+`holdDuration` adds time at the final reaction pose before recovery. It defaults to zero, which preserves the original animation timing exactly. With `duration: 1.4, holdDuration: 2`, the sequence lasts 3.4 seconds: 0.952s to reach the final pose, a 2s hold, then 0.448s recovery. During the hold, expression progress, gaze, reaction body transform and effect animation are frozen. Worried's sweat reaches its configured final fall position and stays visible there until recovery. Idle sway, automatic blinking and speech continue independently; attached effects still follow the character. Reset and interruption can end a hold early. `holdDuration` must be finite and non-negative; `duration` must remain positive. No character asset or schema change is required.
 
 `RenderFrame.reaction` is optional renderer-independent pose data: expression, progress, weights/layers, body position and rotation, gaze, idle displacement and effect values. `motion` stays audio-only. Custom, Three.js and Live2D renderers may ignore the pose. Optional capabilities `reactions` and `idleMotion` describe support.
 
