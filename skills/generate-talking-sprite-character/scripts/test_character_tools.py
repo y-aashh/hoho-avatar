@@ -8,11 +8,31 @@ from pathlib import Path
 from PIL import Image
 from validate_character import validate_definition
 from render_preview import render_state
+from build_reaction_prompts import build_reaction_plan
 
 SCRIPTS = Path(__file__).parent
 
 
 class CharacterToolsTest(unittest.TestCase):
+    def test_shared_gaze_plan(self):
+        for style in ("pixel", "smooth"):
+            plan = build_reaction_plan(style)
+            self.assertEqual(plan["gazeDirection"], "screen-left")
+            self.assertEqual(plan["reactions"]["worried"]["gaze"], {"x": -1, "y": 0})
+            self.assertEqual(plan["reactions"]["look_up"]["gaze"], {"x": -1, "y": -1})
+            self.assertFalse(plan["review"]["automaticGazeDetection"])
+        override = build_reaction_plan("smooth", "right")
+        for name in ("worried", "look_up"):
+            self.assertEqual(override["reactions"][name]["gaze"]["x"], 1)
+        with self.assertRaises(ValueError):
+            build_reaction_plan("smooth", "character-left")
+        with self.assertRaises(ValueError):
+            build_reaction_plan("unknown")
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "reaction-plan.json"
+            subprocess.run([sys.executable, str(SCRIPTS / "build_reaction_prompts.py"), "--render-style", "smooth", "--out", str(output)], check=True, capture_output=True)
+            self.assertEqual(json.loads(output.read_text())["gazeDirection"], "screen-left")
+
     def test_high_resolution_writer_validator_previews_and_matrix(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -34,6 +54,8 @@ class CharacterToolsTest(unittest.TestCase):
             subprocess.run([sys.executable, str(SCRIPTS / "render_test_matrix.py"), str(config), "--out", str(root / "matrix.png")], check=True, capture_output=True)
             self.assertTrue((root / "matrix-reactions.png").is_file())
             self.assertTrue((root / "matrix-closeups.png").is_file())
+            with Image.open(root / "matrix-gaze.png") as gaze_review:
+                self.assertEqual(gaze_review.size, (1200, 228))
             for path in ("../escape.png", "https://bad.test/image.png"):
                 data["reactions"]["worried"]["eyes"] = path
                 with self.assertRaisesRegex(ValueError, "unsafe"):

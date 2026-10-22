@@ -16,6 +16,12 @@ def main():
         parser.error("cell size must be between 128 and 512")
 
     definition = json.loads(args.character.read_text(encoding="utf-8"))
+    plan_path = args.character.parent / "reaction-plan.json"
+    gaze_direction = "screen-left"
+    if plan_path.is_file():
+        gaze_direction = json.loads(plan_path.read_text(encoding="utf-8")).get("gazeDirection", gaze_direction)
+        if gaze_direction not in ("screen-left", "screen-right"):
+            parser.error("reaction-plan.json gazeDirection must be screen-left or screen-right")
     resample = Image.Resampling.LANCZOS if definition.get("renderStyle") == "smooth" else Image.Resampling.NEAREST
     eye_states = EYES if "eyes" in definition else ("open",)
     label_width = 72
@@ -53,6 +59,29 @@ def main():
                 frame.thumbnail((args.cell_size, args.cell_size), resample)
                 review.paste(frame, (x, y + 28), frame)
         review.save(args.out.with_name(args.out.stem + "-reactions.png"))
+        gaze_reactions = [name for name in ("worried", "look_up") if reactions.get(name, {}).get("eyes")]
+        if gaze_reactions and "eyes" in definition:
+            # The sheet exposes the expected direction for human review; PNG
+            # dimensions/alpha alone cannot prove which way a pupil points.
+            columns = [("neutral: center", None), *[
+                (f"{name}: {'up + ' if name == 'look_up' else ''}{gaze_direction}", name)
+                for name in gaze_reactions
+            ]]
+            gaze_sheet = Image.new("RGB", (400 * len(columns), 228), (18, 22, 30))
+            labels = ImageDraw.Draw(gaze_sheet)
+            anchor = definition["eyes"]["anchor"]
+            with Image.open(args.character.parent / definition["eyes"]["sprites"]["open"]) as eye_image:
+                half_width = eye_image.width * 0.65
+                half_height = eye_image.height * 0.85
+            for column, (label, name) in enumerate(columns):
+                frame = render_state(args.character, reaction=name, progress=0.4)
+                crop = frame.crop((round(anchor["x"] - half_width), round(anchor["y"] - half_height),
+                                   round(anchor["x"] + half_width), round(anchor["y"] + half_height)))
+                crop.thumbnail((400, 200), resample)
+                x = column * 400
+                labels.text((x + 4, 6), label, fill="white")
+                gaze_sheet.paste(crop, (x + (400 - crop.width) // 2, 28 + (200 - crop.height) // 2), crop)
+            gaze_sheet.save(args.out.with_name(args.out.stem + "-gaze.png"))
     if definition.get("renderStyle") == "smooth":
         names = [None, *reactions]
         closeups = Image.new("RGB", (512, 256 * len(names)), (18, 22, 30))

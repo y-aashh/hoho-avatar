@@ -150,10 +150,20 @@ eyebrows-impressed.png
 mouth-impressed.png
 ```
 
+**Shared gaze direction is required:** Worried and Look Up must both look **screen-left / viewer-left**, toward the left edge of the image. Worried looks sideways-left; Look Up looks diagonally upper-left. Move both pupils consistently within their sockets. Do not use ambiguous “character left/right” wording, mirror the face, or translate a complete eye/skin layer.
+
+Before generating reaction artwork, build the shared prompt plan (use the chosen `pixel` or `smooth` mode):
+
+```bash
+python "<skill>/scripts/build_reaction_prompts.py" --render-style smooth --out "<out>/reaction-plan.json"
+```
+
+Use each `reactions.<name>.prompt` from this plan with the image-generation capability. The builder has one shared direction setting, preventing contradictory per-reaction instructions. Override it with `--gaze-direction right` only when the user explicitly requests both reactions to look right. This plan is an authoring artifact, not a new required character.json field; it does not generate PNGs or detect their gaze automatically.
+
 Use the same visual language, pixel density or illustration resolution, and facial coordinates as the neutral layers. Eye variants replace the entire eye group without shifting eyelids or skin. Keep each variant's transparent layer dimensions equal to its neutral counterpart where practical; otherwise measure an explicit override anchor. Neutral `eyebrows.png` must exist when declaring eyebrow variants, and the body must not retain painted brows. Never double eyebrows, pupils, or smiles. Sweat art is a separate small transparent PNG anchored at the temple, not painted into the face. It follows the shared character transform and accelerates downwards while fading.
 
-- **Worried (1.4s):** slightly narrow lids, draw brows inward without distorting the eye sockets, sideways pupils, subtle whole-character tilt, then sweat and smooth recovery. Match eyebrow dimensions/anchor to neutral brows and eyes to neutral eyes. Check for skin seams and detached drops at peak and recovery.
-- **Look Up (1.2s):** matching eye art with pupils diagonally toward the character's upper right (viewer-left for a frontal character), unchanged eyelid and skin placement; subtle tilt, brief hold, return. Check both pupils agree and remain inside the eyes. The runtime uses the complete eye sprite; it does not translate the eye layer.
+- **Worried (1.4s):** slightly narrow lids, draw brows inward without distorting the eye sockets, both pupils toward screen-left, subtle whole-character tilt, then sweat and smooth recovery. Match eyebrow dimensions/anchor to neutral brows and eyes to neutral eyes. Check for skin seams and detached drops at peak and recovery.
+- **Look Up (1.2s):** matching eye art with both pupils diagonally toward the upper-left edge of the image (screen-left/viewer-left), unchanged eyelid and skin placement; subtle tilt, brief hold, return. Check both pupils agree and remain inside the eyes. The runtime uses the complete eye sprite; it does not translate the eye layer.
 - **Impressed (1.5s):** slightly widened eyes, lifted brows, delighted smile, small pullback and approving nod. Mouth dimensions and center match existing mouths; optional `mouth-impressed.png` only appears while not speaking. Check all five audio mouths over this expression and during blinks.
 
 Review neutral, peak, and recovery composites at native resolution and close-up. Reject mismatched skin patches, duplicate anatomy, floating mouths, stretched faces, and cropped motion. When art is missing, omit the undeclared feature and retain neutral art; do not draw a crude substitute. Reactions are temporary poses from `ReactionController`, separate from `CharacterState`. `MotionController` delivers them in `RenderFrame` through the existing animation loop.
@@ -192,6 +202,8 @@ This produces ten cells for a blinking character and five for a character withou
 - teeth appear only where natural for that state and share the artwork's palette, pixel density, and contrast;
 - eyes and mouths feel painted in the same hand as the body at both original size and matrix-preview size;
 - requested concept or identity, clothing or body treatment, and composition details remain visible in the final composites.
+
+**Gaze review before packaging:** `render_test_matrix.py` also writes `*-gaze.png` when reaction eye art is declared. Compare Worried and Look Up beside neutral. Both eyes in both reactions must point screen-left; Look Up must additionally point upward. The sheet reads the shared direction from adjacent `reaction-plan.json` when present, otherwise it labels screen-left. Inspect actual pupil artwork and browser composites, including entry, peak and recovery; labels or JSON declarations are not proof. Reject opposite gaze, crossed eyes or shifted eyelids, correct the pupil artwork and repeat review before packaging.
 
 If any cell fails, adjust the body, anchors, face sample, or layer geometry and regenerate the complete matrix. Use `render_preview.py` only for targeted debugging. For declared reactions the matrix also writes neutral/peak/recovery review images, and smooth characters get eye/mouth close-ups. Inspect those at native resolution. Then verify actual browser Canvas frames: all reactions, moving sweat, maximum sway, blinking, speaking during reactions, and recovery. Preserve review artifacts when useful for delivery.
 
