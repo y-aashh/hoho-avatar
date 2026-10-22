@@ -35,7 +35,7 @@ export class PCMAnalyzer {
   }
 
   analyze(samples: ArrayLike<number>, timestamp = performance.now()): AudioFeatures {
-    if (!samples.length) return { timestamp, rms: 0, peak: 0, zeroCrossingRate: 0, estimatedFrequencyHz: 0, roundnessScore: 1 };
+    if (!samples.length) return { timestamp, rms: 0, peak: 0, zeroCrossingRate: 0, estimatedFrequencyHz: 0, roundnessScore: 0 };
     let sumSquares = 0;
     let peak = 0;
     let crossings = 0;
@@ -50,13 +50,17 @@ export class PCMAnalyzer {
     }
 
     const zeroCrossingRate = crossings / Math.max(1, samples.length - 1);
+    const estimatedFrequencyHz = zeroCrossingRate * (this.sampleRate / 2);
     return {
       timestamp,
       rms: Math.sqrt(sumSquares / samples.length),
       peak,
       zeroCrossingRate,
-      estimatedFrequencyHz: zeroCrossingRate * (this.sampleRate / 2),
-      roundnessScore: Math.max(0, Math.min(1, 1 - zeroCrossingRate / 0.18)),
+      estimatedFrequencyHz,
+      // Express the old 48 kHz reference in Hz: raw crossings/sample changed
+      // the score when the same WAV was decoded at another processing rate.
+      // Silence/DC has no evidence of a rounded vowel.
+      roundnessScore: crossings > 0 ? Math.max(0, Math.min(1, 1 - estimatedFrequencyHz / 4320)) : 0,
     };
   }
 

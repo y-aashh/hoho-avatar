@@ -1,3 +1,4 @@
+import type { ReactionName, ReactionOptions, ReactionControllerOptions } from '../animation/ReactionController';
 import { AudioClipPlayer } from "../audio-source/AudioClipPlayer";
 import type { AudioClipMetadata } from "../audio-source/AudioClipPlayer";
 import { MicrophoneInput } from "../audio-source/MicrophoneInput";
@@ -8,6 +9,7 @@ import { waitFor } from '../internal/abort';
 
 export interface AvatarOptions {
   renderer: RendererFactory;
+  reactions?: ReactionControllerOptions;
   /** Rate of externally supplied mono PCM. Default: 48 kHz. */
   sampleRate?: number;
   onMotion?: (frame: MotionFrame) => void;
@@ -27,6 +29,9 @@ export class Avatar {
 
   constructor(private readonly controller: MotionController) {}
 
+  triggerReaction(name: ReactionName, options?: ReactionOptions): void { this.assertActive(); this.controller.triggerReaction(name, options); }
+  setIdleMotion(enabled: boolean): void { this.assertActive(); this.controller.setIdleMotion(enabled); }
+  resetReaction(): void { this.assertActive(); this.controller.resetReaction(); }
   get ready(): Promise<void> { return this.controller.ready; }
   get capabilities(): RendererCapabilities { return this.controller.capabilities; }
   start(): void { this.assertActive(); this.controller.start(); }
@@ -161,7 +166,7 @@ export async function createAvatar(canvas: HTMLCanvasElement, options: AvatarOpt
   if (!Number.isFinite(rate) || rate <= 0) throw new Error('sampleRate must be a positive finite number');
   let controller: MotionController | undefined;
   const renderer = options.renderer(canvas, { onError: (error) => controller?.reportError(error) });
-  controller = new MotionController(renderer, rate, options.onError);
+  controller = new MotionController(renderer, rate, options.onError, options.reactions);
   const avatar = new Avatar(controller);
   try {
     await waitFor(avatar.ready, options.signal);

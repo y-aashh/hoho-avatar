@@ -83,6 +83,16 @@ describe("loadSpriteCharacterPackage", () => {
     expect(revoked).toHaveLength(6);
   });
 
+  it('imports and disposes optional reaction art and reports declared missing assets', async () => {
+    const config = { ...definition, reactions: { worried: { effect: { src: 'sweat.png', anchor: { x: 300, y: 180 } } } } };
+    const files = { 'avatar/character.json': strToU8(JSON.stringify(config)), 'avatar/sweat.png': new Uint8Array([1]) };
+    let count = 0; const revoked: string[] = [];
+    const loaded = await loadSpriteCharacterPackage(packageFile(files), { create: () => `blob:test-${++count}`, revoke: url => { revoked.push(url); } });
+    expect(loaded.definition.reactions!.worried!.effect!.src).toMatch(/^blob:/);
+    loaded.dispose(); expect(revoked).toHaveLength(7);
+    await expect(loadSpriteCharacterPackage(packageFile({ 'avatar/character.json': files['avatar/character.json'] }), { create: () => 'blob:test', revoke: () => {} })).rejects.toThrow('sweat.png');
+  });
+
   it("rejects a package with a missing referenced asset", async () => {
     const files = packageFile();
     const bytes = await unzipAndRemove(files, "avatar/mouth-wide.png");

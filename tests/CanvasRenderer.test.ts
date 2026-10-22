@@ -46,6 +46,28 @@ describe("Canvas renderer", () => {
     sprite.destroy();
   });
 
+  it('loads reaction sprites once relative to the config and rejects a declared broken sprite', async () => {
+    const paths: string[] = [];
+    vi.stubGlobal('document', { baseURI: 'https://example.test/app/' });
+    vi.stubGlobal('Image', class {
+      onload: (() => void) | null = null; onerror: (() => void) | null = null;
+      width = 16; height = 16;
+      set src(value: string) { paths.push(value); queueMicrotask(() => value.endsWith('broken.png') ? this.onerror?.() : this.onload?.()); }
+    });
+    const context = { clearRect: vi.fn(), drawImage: vi.fn(), imageSmoothingEnabled: false, globalAlpha: 1 };
+    const canvas = { getContext: () => context } as unknown as HTMLCanvasElement;
+    const definition = { ...character, reactions: { worried: { effect: { src: 'sweat.png', anchor: { x: 80, y: 40 } } } } };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => definition }));
+    const renderer = new CanvasRenderer(canvas, { character: 'characters/a/character.json' });
+    await renderer.ready;
+    expect(paths).toContain('https://example.test/app/characters/a/sweat.png');
+    renderer.reset(); renderer.reset();
+    expect(paths.filter(p => p.endsWith('sweat.png'))).toHaveLength(1);
+    renderer.destroy();
+    definition.reactions.worried.effect.src = 'broken.png';
+    await expect(new CanvasRenderer(canvas, { character: definition }).ready).rejects.toThrow('broken.png');
+  });
+
   it("does not initialize a renderer after being destroyed during loading", async () => {
     const images: Array<{ onload: (() => void) | null; width: number; height: number }> = [];
     vi.stubGlobal("Image", class {

@@ -80,6 +80,28 @@ describe('shared motion controller', () => {
     controller.destroy();
   });
 
+  it('keeps reactions and sway through speech reset, blinking and teardown', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const { controller, renderer, tick } = setup(); await controller.ready;
+    const start = performance.now();
+    controller.start(); controller.setIdleMotion(true); controller.triggerReaction('worried', { duration: 5 });
+    tick(start + 500);
+    controller.pushPCM(new Float32Array(1440).fill(0.3));
+    tick(start + 600);
+    expect(renderer.render.mock.calls.at(-1)![0]).toMatchObject({ motion: { speaking: true }, reaction: { expression: 'worried' } });
+    controller.resetAudio(); tick(start + 700);
+    expect(renderer.render.mock.calls.at(-1)![0]).toMatchObject({ motion: { mouth: 'closed' }, reaction: { expression: 'worried' } });
+    tick(start + 2300);
+    expect(renderer.render.mock.calls.at(-1)![0].eyesClosed).toBe(true);
+    expect(renderer.render.mock.calls.at(-1)![0].reaction!.idle.x).not.toBe(0);
+    controller.resetReaction(); tick(start + 2600);
+    expect(renderer.render.mock.calls.at(-1)![0].reaction!.layers).toEqual([]);
+    controller.triggerReaction('impressed'); controller.destroy();
+    const calls = renderer.render.mock.calls.length; tick(start + 2700);
+    expect(renderer.render).toHaveBeenCalledTimes(calls);
+    expect(() => controller.triggerReaction('worried')).toThrow('destroyed');
+  });
+
   it('passes every shared state to the renderer and rejects invalid values without changing state', async () => {
     const { controller, renderer, tick } = setup();
     await controller.ready;

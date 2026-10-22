@@ -35,12 +35,26 @@ function setup() {
   vi.stubGlobal('navigator', { mediaDevices: { getUserMedia: capture } });
   vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
-  const sprite = { resetAudio: vi.fn(), setSampleRate: vi.fn(), pushPCM: vi.fn(), destroy: vi.fn() };
+  const sprite = { resetAudio: vi.fn(), setSampleRate: vi.fn(), pushPCM: vi.fn(), destroy: vi.fn(), triggerReaction: vi.fn(), setIdleMotion: vi.fn(), resetReaction: vi.fn() };
   return { sprite, avatar: new Avatar(sprite as unknown as MotionController), contexts, worklets, tracks, decode, capture };
 }
 
 describe('Avatar SDK', () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it('forwards public reactions and guards them after destruction', async () => {
+    const { avatar, sprite } = setup();
+    avatar.triggerReaction('look_up', { duration: 1.2, intensity: 0.8 });
+    avatar.setIdleMotion(true); avatar.resetReaction();
+    expect(sprite.triggerReaction).toHaveBeenCalledWith('look_up', { duration: 1.2, intensity: 0.8 });
+    expect(sprite.setIdleMotion).toHaveBeenCalledWith(true);
+    expect(sprite.resetReaction).toHaveBeenCalledOnce();
+    avatar.stopAudio(); expect(sprite.resetReaction).toHaveBeenCalledOnce();
+    await avatar.destroy();
+    expect(() => avatar.triggerReaction('worried')).toThrow('destroyed');
+    expect(() => avatar.resetReaction()).toThrow('destroyed');
+    expect(() => avatar.setIdleMotion(false)).toThrow('destroyed');
+  });
 
   it('cancels delayed file decoding when switching to microphone capture', async () => {
     const { avatar, sprite, decode, contexts, worklets, tracks } = setup();

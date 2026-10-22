@@ -1,9 +1,21 @@
 {
   "version": 1,
-  "canvas": { "width": 512, "height": 512 },
-  "body": { "src": "body.png", "x": 0, "y": 0, "width": 512, "height": 512 },
+  "canvas": {
+    "width": 512,
+    "height": 512
+  },
+  "body": {
+    "src": "body.png",
+    "x": 0,
+    "y": 0,
+    "width": 512,
+    "height": 512
+  },
   "mouth": {
-    "anchor": { "x": 256, "y": 214 },
+    "anchor": {
+      "x": 256,
+      "y": 214
+    },
     "sprites": {
       "closed": "mouth-closed.png",
       "small": "mouth-small.png",
@@ -13,7 +25,48 @@
     }
   },
   "eyes": {
-    "anchor": { "x": 256, "y": 161 },
-    "sprites": { "open": "eyes-open.png", "closed": "eyes-closed.png" }
+    "anchor": {
+      "x": 256,
+      "y": 161
+    },
+    "sprites": {
+      "open": "eyes-open.png",
+      "closed": "eyes-closed.png"
+    }
+  },
+  "eyebrows": {
+    "src": "eyebrows.png",
+    "anchor": {
+      "x": 256,
+      "y": 161
+    }
+  },
+  "animation": {
+    "pivot": {
+      "x": 256,
+      "y": 330
+    }
+  },
+  "reactions": {
+    "worried": {
+      "eyes": "eyes-worried.png",
+      "eyebrows": "eyebrows-worried.png",
+      "effect": {
+        "src": "sweat-drop.png",
+        "anchor": {
+          "x": 330,
+          "y": 153
+        },
+        "fallPx": 40
+      }
+    },
+    "look_up": {
+      "eyes": "eyes-look-up.png"
+    },
+    "impressed": {
+      "eyes": "eyes-impressed.png",
+      "eyebrows": "eyebrows-impressed.png",
+      "mouth": "mouth-impressed.png"
+    }
   }
 }

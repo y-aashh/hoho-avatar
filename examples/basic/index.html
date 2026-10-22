@@ -91,6 +91,20 @@
               <div class="model-expressions" role="group" aria-label="Preview mouth shape"><button id="blinkPreview" aria-pressed="false">Blink</button></div>
             </div>
 
+            <fieldset id="reactionControls" class="reaction-controls" disabled>
+              <legend>Reactions</legend>
+              <div class="model-expressions">
+                <button type="button" data-reaction="worried">Worried</button>
+                <button type="button" data-reaction="look_up">Look Up</button>
+                <button type="button" data-reaction="impressed">Impressed</button>
+                <button type="button" id="resetReaction">Reset Reaction</button>
+              </div>
+              <div class="reaction-settings">
+                <label>Duration (seconds) <input id="reactionDuration" type="number" min="0.1" max="30" step="0.1" placeholder="Default"></label>
+                <label>Intensity <input id="reactionIntensity" type="range" min="0" max="1" step="0.05" value="1"></label>
+                <label><input id="idleSway" type="checkbox"> Idle Sway</label>
+              </div>
+            </fieldset>
             <p id="live2dCredit" class="live2d-credit" hidden>This content uses sample data owned and copyrighted by Live2D Inc. The sample data are utilized in accordance with terms and conditions set by Live2D Inc. This content itself is created at the author's sole discretion. <a href="https://www.live2d.com/eula/live2d-sample-model-terms_en.html" target="_blank" rel="noreferrer">Model terms</a></p>
             <div class="character-library">
               <div class="library-heading"><h2>Choose your alter ego</h2><span>Choose a character</span></div>

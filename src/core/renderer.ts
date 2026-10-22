@@ -1,7 +1,11 @@
+import type { ReactionPose, ReactionControllerOptions, ReactionName } from '../animation/ReactionController';
 import type { CharacterState, MotionFrame, MouthState } from './types';
 
 /** All renderer implementations consume this engine-independent frame. */
 export interface RenderFrame {
+  reaction?: Readonly<ReactionPose>;
+  /** Manual mouth art takes priority over a reaction mouth. */
+  mouthPreview?: boolean;
   motion: Readonly<MotionFrame>;
   eyesClosed: boolean;
   state: CharacterState;
@@ -11,6 +15,8 @@ export interface RenderFrame {
 
 export interface RendererCapabilities {
   readonly mouth: readonly MouthState[];
+  readonly reactions?: readonly ReactionName[];
+  readonly idleMotion?: boolean;
   readonly blink: boolean;
   readonly viewControl: boolean;
 }
@@ -20,6 +26,7 @@ export interface RendererCapabilities {
  * remain callable and are no-ops when unsupported. destroy() is idempotent.
  */
 export interface AvatarRenderer {
+  readonly reactionOptions?: ReactionControllerOptions;
   readonly ready: Promise<void>;
   readonly capabilities: RendererCapabilities;
   render(frame: Readonly<RenderFrame>): void;

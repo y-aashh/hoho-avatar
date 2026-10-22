@@ -1,3 +1,4 @@
+import type { ReactionName } from '../animation/ReactionController';
 import { parseSpriteCharacterDefinition } from "./parseSpriteCharacter";
 import type { SpriteCharacterDefinition } from "./SpriteCharacterDefinition";
 import type { MouthState } from "../core/types";
@@ -7,6 +8,8 @@ export interface LoadedSpriteCharacter {
   definition: SpriteCharacterDefinition;
   body: HTMLImageElement;
   mouths: Record<MouthState, HTMLImageElement>;
+  eyebrows?: HTMLImageElement;
+  reactions?: Partial<Record<ReactionName, Partial<Record<'eyes' | 'eyebrows' | 'mouth' | 'effect', HTMLImageElement>>>>;
   eyes?: Record<"open" | "closed", HTMLImageElement>;
 }
 
@@ -43,14 +46,25 @@ export async function loadSpriteCharacter(source: string | SpriteCharacterDefini
   const eyesPromise = definition.eyes
     ? Promise.all(Object.entries(definition.eyes.sprites).map(async ([key, path]) => [key, await loadImage(resolve(path), signal)] as const))
     : undefined;
-  const [body, mouthEntries, eyeEntries] = await Promise.all([
+  const reactionPromise = Promise.all(Object.entries(definition.reactions ?? {}).map(async ([name, reaction]) => {
+    const entries = await Promise.all((['eyes', 'eyebrows', 'mouth', 'effect'] as const).map(async key => {
+      const path = key === 'effect' ? reaction.effect?.src : reaction[key];
+      return [key, path ? await loadImage(resolve(path), signal) : undefined];
+    }));
+    return [name, Object.fromEntries(entries)];
+  }));
+  const [body, mouthEntries, eyeEntries, reactions, eyebrows] = await Promise.all([
     loadImage(resolve(definition.body.src), signal),
     mouthPromise,
     eyesPromise,
+    reactionPromise,
+    definition.eyebrows ? loadImage(resolve(definition.eyebrows.src), signal) : undefined,
   ]);
 
   return {
     definition,
+    reactions: Object.fromEntries(reactions),
+    eyebrows,
     body,
     mouths: Object.fromEntries(mouthEntries) as Record<MouthState, HTMLImageElement>,
     eyes: eyeEntries ? Object.fromEntries(eyeEntries) as Record<"open" | "closed", HTMLImageElement> : undefined,

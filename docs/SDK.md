@@ -132,6 +132,20 @@ SpriteCharacterDefinition, SpritePlacement and parseSpriteCharacterDefinition ar
 
 AudioFeatures uses estimatedFrequencyHz (derived from zero crossings) and roundnessScore (a 0..1 heuristic). These replace the misleading spectralCentroid and lowBandRatio names; the calculation does not measure a spectrum.
 
+Mouth selection uses linear RMS for opening and a conservative frequency cue for rounding. In digital dBFS (`20 * log10(rms)`), the default raw rules are:
+
+| Input | Mouth |
+| --- | --- |
+| Below 0.018 RMS (about −34.9 dBFS) | Closed after the 80ms silence delay |
+| Above 0.16 RMS (about −15.9 dBFS) | Large |
+| Audible, below the loud threshold, zero-crossing frequency estimate above 2800Hz | Wide |
+| At least 0.036 RMS (about −28.9 dBFS), roundness score above 0.9, confirmed for 60ms | Round |
+| Other audible speech | Small |
+
+Roundness is normalized to the same physical frequency across sample rates: `max(0, 1 - estimatedFrequencyHz / 4320)` when crossings exist, otherwise zero. The default 0.9 threshold corresponds to a frequency estimate below 432Hz. Previously, counting crossings per sample made the same WAV more likely to select Round when decoded at a higher rate. A low-frequency voice alone is not proof of an “oo”/“oh” sound; this remains a heuristic rather than phoneme recognition.
+
+Ordinary changes retain the 50ms minimum state duration. Round requires sustained evidence and releases immediately when that evidence ends; it is not held through the silence delay. `MouthClassifierOptions` supports `roundThreshold`, `roundMinDurationMs` and `roundMinRms` for applications that instantiate the classifier directly. WAV playback, microphone capture and streamed PCM use the same classification defaults and existing audio pipeline.
+
 Pass the URL of a V1 `character.json`, with images stored beside it, or a validated `SpriteCharacterDefinition` containing image URLs. A relative image path in a JSON file resolves relative to that JSON URL. Paths in an object resolve against the document base URI.
 
 The bundled robot entry contains asset URLs relative to its ESM module. Vite production builds copy those assets automatically. The SDK worklet is a separate `audio-clip-processor.js` file, not an inline blob; retain the complete `dist-sdk/` directory, including shared JavaScript chunks, if serving the package directly. Native browser ESM and Vite builds on a nested base path are covered by the package consumer test. Other bundlers should preserve `new URL(..., import.meta.url)` asset references.
@@ -163,3 +177,22 @@ The single Studio in `examples/basic/` imports local SDK source for Canvas, Thre
 Run `npm run setup:demo` after installing repository dependencies. `npm run dev`, `npm run dev:all`, and `npm run build` use the checked-out SDK; the only Studio output is `examples/basic/dist/`. GitHub Pages runs `npm run setup:live2d-sample` and `npm run build:pages` to include the official Live2D sample, Core and license notices, then verifies the result with `npm run test:pages`. `npm run build:sdk` and `npm pack` remain separate SDK distribution commands and exclude these assets.
 
 `npm run test:package` builds and inspects the tarball, installs it into a fresh consumer, checks NodeNext types and server-side import, then runs native ESM and Vite production browser checks for character loading, audio-worklet PCM, microphone capture and disposal. See [RELEASING.md](https://github.com/HH1st/hoho-avatar/blob/main/docs/RELEASING.md) before publishing.
+
+### Canvas reactions
+
+```ts
+avatar.triggerReaction('worried');
+avatar.triggerReaction('look_up', { duration: 1.2, intensity: 0.8 });
+avatar.triggerReaction('impressed', { interrupt: false });
+avatar.setIdleMotion(true);
+avatar.resetReaction(); // 220ms recovery, leaves idle motion enabled
+avatar.setIdleMotion(false); // damped settling
+```
+
+Durations are seconds; intensity is finite in [0,1]. Unknown names and invalid options throw. Calls after destruction follow the existing API and throw a destroyed error. Creation accepts `reactions: { seed: 42, idleMotion: true, idleSway: { rotationDeg: 0.9 } }`. Sway is opt-in unless the character declares idle settings. Reactions use the existing frame loop and survive `stopAudio()` / `resetAudio()`. Speech and manual mouth previews take priority over reaction mouths; automatic/manual blinks take priority over reaction eyes.
+
+`RenderFrame.reaction` is optional renderer-independent pose data: expression, progress, weights/layers, body position and rotation, gaze, idle displacement and effect values. `motion` stays audio-only. Custom, Three.js and Live2D renderers may ignore the pose. Optional capabilities `reactions` and `idleMotion` describe support.
+
+Canvas V1 optional metadata includes `renderStyle: 'pixel' | 'smooth'`, `animation.pivot`, `animation.idleSway`, neutral `eyebrows`, and `reactions` sprite overrides. See the bundled character-generation skill's `references/character-format.md`. Smooth art preserves interpolation and fractional placement; legacy characters default to pixel rendering. Facial variants require matching artwork and a clean face base; the renderer does not erase painted facial features. Characters without reaction art retain neutral facial layers and display only supported motion.
+
+Canvas displays one complete facial expression at a time. Raster eye, brow and mouth variants switch together at the dominant pose weight; they do not alpha-crossfade displaced facial features. Body motion and foreground effects remain eased continuously, including interruption and recovery.

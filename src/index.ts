@@ -26,3 +26,6 @@ export type { AvatarOptions } from "./core/Avatar";
 export { MicrophoneInput } from "./audio-source/MicrophoneInput";
 export type { PCMAnalyzerOptions } from "./audio/PCMAnalyzer";
 export type { MouthClassifierOptions } from "./audio/MouthClassifier";
+
+export { ReactionController, REACTIONS } from './animation/ReactionController';
+export type { ReactionName, ReactionOptions, ReactionPose, ReactionLayerPose, IdleMotionOptions, ReactionControllerOptions } from './animation/ReactionController';
