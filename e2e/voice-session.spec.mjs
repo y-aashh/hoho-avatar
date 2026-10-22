@@ -221,7 +221,7 @@ test("switching provider while the gateway health request is pending cancels sta
 
 test("ending during avatar loading keeps the avatar visible without starting capture", async ({ page }) => {
   let release;
-  await page.route("**/characters/niu-lai/character.json", async (route) => {
+  await page.route("**/characters/pixel-bot/character.json", async (route) => {
     const response = await route.fetch();
     await new Promise((resolve) => { release = resolve; });
     await route.fulfill({ response });

@@ -27,7 +27,6 @@ html[data-theme='morning'] {
     border-color: #dfc7a5;
   }
   .stage-wrap[data-character='pixel-bot'] { background: radial-gradient(ellipse at 35% 14%, #f6f9e8, #e4eddb 40%, #cbdac9 76%, #c0d0c0); }
-  .stage-wrap[data-character='pixel-portrait'] { background: radial-gradient(ellipse at 35% 14%, #fff2e7, #f5dfd8 40%, #e6cfda 76%, #d8c4d0); }
   .stage-caption, .stage-kicker, .stage-note { color: #796249; }
   .status-pill { color: #69543e; border-color: #c9b391; background: #fffaf0d9; }
   #statusDot, .small-dot { background: #8d785c; }

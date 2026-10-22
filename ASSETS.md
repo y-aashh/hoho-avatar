@@ -1,28 +1,20 @@
 # Example asset licensing
 
-The distributable SDK includes only `pixel-bot`, copied into `dist-sdk/characters/pixel-bot/` with its MIT license. Other demo characters, screenshots, recordings and phonemizer data are excluded from the npm file allowlist.
+The public showcase includes Pixel Bot, Mira and Arthur. Pixel Bot remains the only artwork included in the distributable SDK, copied into `dist-sdk/characters/pixel-bot/` with its MIT license. Recordings and phonemizer data are excluded from the npm file allowlist.
 
-The three character sets under `public/characters/` are project demo assets:
+`public/characters/pixel-bot` is original project artwork under the repository's [MIT License](LICENSE). Its optional reaction eyes, eyebrows, delighted mouth and transparent sweat-drop PNG are original procedurally authored pixel layers under the same license.
 
-- `niu-lai` is reference-guided artwork generated with OpenAI ImageGen from a film still of the character Niu Lai, then converted into layered pixel-art sprites with the bundled asset-generation Skill. The reference image is not distributed with this repository. Niu Lai and the underlying film character remain the property of their respective rights holders; this asset is excluded from the repository's MIT License and must not be redistributed without the necessary rights.
-- `pixel-bot` is original project artwork created for the Hoho Avatar demo. Its optional reaction eyes, eyebrows, delighted mouth and transparent sweat-drop PNG are original procedurally authored pixel layers under the same MIT license; the existing body and neutral eye/mouth PNGs are unchanged.
-- `pixel-portrait` is a stylized portrait asset contributed by the project maintainer. Reference photographs and source images are intentionally not distributed with this repository.
+`public/characters/mira` is original text-guided artwork generated with OpenAI ImageGen for this public showcase, following `skills/generate-talking-sprite-character/SKILL.md` in smooth mode. Matching edited facial artwork supplies all five speech mouths, blinking, three reactions and a separate sweat-drop PNG. No reference photographs or third-party character designs were used. The Mira asset set is distributed under the repository MIT license; its own `LICENSE` and generation notes are included with the assets.
 
-The project maintainer has chosen to distribute `pixel-bot` and `pixel-portrait` under the repository's [MIT License](LICENSE). This permits reuse and modification of those asset files under its terms. Their inclusion does not imply endorsement of a derivative work, product, or service by the project contributors or any depicted person.
+`public/characters/arthur` is original text-guided artwork generated with OpenAI ImageGen for this public showcase through the same smooth-mode skill workflow. His glasses, swept-back silver hair, salt-and-pepper beard and clothing remain registered across speech, blink and reaction layers. No reference photographs or third-party character artwork were used. Arthur is distributed under the included repository MIT license, with generation notes and a verified importable ZIP.
 
-Contributors adding an example character must own the artwork or have explicit redistribution rights. Document its source and license in this file. Do not commit private reference images, temporary generations, or assets whose redistribution terms are unclear.
-
-## Mochi 3D character
-
-`assets/blender/mochi.blend` and `public/models/mochi/mochi.glb` are original project artwork modeled in Blender with `scripts/blender/create_mochi.py`, using mesh geometry and procedural materials only. They are distributed under the repository MIT license. The GLB includes mouth and blink morph targets. The Blender source and demo model are excluded from the SDK npm package.
-
-The 3D Studio uses Three.js under its MIT license, retained at `public/licenses/three-MIT.txt` and copied into its production build. Blender is an authoring tool and is not bundled into the SDK or site.
+Contributors adding an example character must own the artwork or have explicit redistribution rights. Document its source and license here. Do not commit private reference images, temporary generations, or assets whose redistribution terms are unclear. Private characters under `working/characters/` are not public demo assets.
 
 ## Live2D
 
-The optional Live2D renderer uses PixiJS and pixi-live2d-display with MIT notices in public/licenses/. Embedded Cubism framework components have Live2D's separate Open Software License. Proprietary Cubism Core and the Wankoromochi fixture are cached in ignored tmp/live2d-sample. The dedicated Pages build copies the verified resources and license documents into its output; the ordinary production build and npm SDK exclude these resources. See docs/LIVE2D.md for deployment requirements.
+The optional Live2D renderer uses PixiJS and pixi-live2d-display with MIT notices in `public/licenses/`. Embedded Cubism framework components have Live2D's separate Open Software License. Core and model assets are caller-owned and are not bundled in the public site or npm SDK. The optional Wankoromochi test fixture is cached only in ignored `tmp/live2d-sample`; see [docs/LIVE2D.md](docs/LIVE2D.md).
 
-`examples/basic/assets/wankoromochi-preview.png` is a transparent rendering of the pinned official Wankoromochi sample, used in the character picker. It retains Live2D's Free Material and sample model terms, is excluded from this project's MIT license and the npm SDK, and is not original project artwork. The Studio displays the required Live2D credit whenever the sample and its preview are available. Its model source and checksums are recorded in `scripts/live2d-sample-manifest.mjs`.
+## Speech synthesis data
 
 `public/espeak-en-dict.tsv` and `public/en_rules` are copied from the
 [`kitten-tts-webgpu` public assets](https://github.com/svenflow/kitten-tts-webgpu/tree/main/public).

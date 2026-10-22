@@ -34,12 +34,8 @@ Status: implemented for source development, the standalone demo and CI.
 
 The repository and `examples/basic/` commit public-registry lockfiles. CI installs both with `npm ci`; the unified demo imports SDK source and the package-consumer tests independently verify tarball installs.
 
-## Renderer expansion
+## Renderer support
 
-Status: Canvas, Three.js and Live2D adapters are implemented in source (unreleased).
+Canvas and optional Live2D adapters share one Avatar API, RenderFrame and audio owner. Pixel Bot is the default; Mira and Arthur are the smooth illustrated public showcase characters. Caller-owned V1 sprite ZIPs and configured Live2D models remain supported.
 
-- implemented: one Avatar API with explicit renderer implementations, shared RenderFrame, renderer-independent audio owner, Three.js GLB mouth/blink targets, target capability discovery, and one Studio with 2D/3D character selection;
-- implemented: original Blender source, reproducible export script, GLB and morph validation;
-- remaining: wider renderer adapters, skeletal poses/visemes, VRM, and SDK release and deployment of the unified Studio.
-
-Live2D Cubism 3/4 is implemented through the same AvatarRenderer interface, optional PixiJS/display dependencies and caller-owned Core/model assets. The unified Studio supports configured Live2D characters.
+Three.js, GLB import and Blender authoring have been removed from the supported source and package entries. Private working characters are outside the public asset library.

@@ -20,9 +20,9 @@ function setup() {
 afterEach(() => vi.unstubAllGlobals());
 it('reuses a character for new audio and applies the latest rate/state', async () => {
   const { stage, factory, canvas, mounted } = setup();
-  await stage.ensure('mochi', async () => factory, 48_000, CharacterState.Idle);
+  await stage.ensure('pixel-bot', async () => factory, 48_000, CharacterState.Idle);
   const avatar = stage.avatar;
-  await stage.ensure('mochi', async () => factory, 24_000, CharacterState.Listening);
+  await stage.ensure('pixel-bot', async () => factory, 24_000, CharacterState.Listening);
   expect(stage.avatar).toBe(avatar); expect(factory).toHaveBeenCalledOnce();
   expect(canvas.cloneNode).toHaveBeenCalledOnce(); expect(mounted).toHaveBeenCalledOnce();
   expect(avatar!.getState()).toBe(CharacterState.Listening);
@@ -32,9 +32,9 @@ it('cancels a waiting audio session without aborting the character load', async 
   const { stage, factory, renderer } = setup();
   let release!: () => void;
   Object.assign(renderer, { ready: new Promise<void>((resolve) => { release = resolve; }) });
-  const initial = stage.ensure('mochi', async () => factory, 48_000, CharacterState.Idle);
+  const initial = stage.ensure('pixel-bot', async () => factory, 48_000, CharacterState.Idle);
   const abort = new AbortController();
-  const waiting = stage.ensure('mochi', async () => factory, 24_000, CharacterState.Listening, abort.signal);
+  const waiting = stage.ensure('pixel-bot', async () => factory, 24_000, CharacterState.Listening, abort.signal);
   const rejected = expect(waiting).rejects.toMatchObject({ name: 'AbortError' });
   abort.abort(); stage.setState(CharacterState.Idle); await rejected;
   release(); await initial;

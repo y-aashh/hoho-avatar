@@ -9,9 +9,10 @@ export const voiceAgentConfig = {
   healthUrl: localVoiceAgentAvailable && !configuredVoiceAgentUrl ? '/voice-agent/healthz' : undefined,
 };
 
-const hasLocalLive2D = import.meta.env.DEV && import.meta.env.HOHO_LIVE2D_SAMPLE === true;
-const hasPagesLive2D = import.meta.env.HOHO_LIVE2D_PAGES === true;
-const sampleBase = hasPagesLive2D ? import.meta.env.BASE_URL + 'live2d/' : hasLocalLive2D ? '/__live2d/' : '';
+// Sample assets are an explicit local test fixture, never a bundled public character.
+const hasLocalLive2D = import.meta.env.DEV && import.meta.env.HOHO_LIVE2D_SAMPLE === true
+  && import.meta.env.VITE_LIVE2D_SAMPLE === 'true';
+const sampleBase = hasLocalLive2D ? '/__live2d/' : '';
 const configuredModelUrl = import.meta.env.VITE_LIVE2D_MODEL_URL?.trim();
 
 export const live2dConfig = {

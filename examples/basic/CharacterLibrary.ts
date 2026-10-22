@@ -6,7 +6,6 @@ import { loadSpriteCharacterPackage } from './characterPackage';
 import type { LoadedSpriteCharacterPackage } from './characterPackage';
 import { live2dConfig } from './studioConfig';
 import { element } from './studioDom';
-import wankoromochiPreview from './assets/wankoromochi-preview.png';
 
 interface CharacterLibraryOptions {
   stage: CharacterStage;
@@ -26,26 +25,18 @@ export class CharacterLibrary {
   private readonly wrap = element('.stage-wrap');
   private readonly label = element('#stageLabel');
   private readonly credit = element('#live2dCredit');
-  private readonly customModelButton = element<HTMLButtonElement>('#customModelButton');
-  private readonly customModelName = element('#customModelName');
   private readonly customAvatarButton = element<HTMLButtonElement>('#customAvatarButton');
   private readonly customAvatarName = element('#customAvatarName');
   private readonly events = new AbortController();
-  private selectedId = 'niu-lai';
+  private selectedId = 'pixel-bot';
   private busy = false;
   private customAvatar?: LoadedSpriteCharacterPackage;
 
   constructor(private readonly options: CharacterLibraryOptions) {
     const requested = new URLSearchParams(location.search).get('character');
-    if ((requested === 'mochi' || requested === 'live2d') && this.catalog.has(requested)) this.selectedId = requested;
+    if (requested && this.catalog.has(requested)) this.selectedId = requested;
     const live2dButton = element<HTMLButtonElement>('[data-avatar="live2d"]');
     live2dButton.hidden = !live2dConfig.modelUrl;
-    if (live2dConfig.usesSample) {
-      const preview = element<HTMLImageElement>('#live2dPreview');
-      preview.src = wankoromochiPreview;
-      preview.hidden = false;
-      element<SVGElement>('#live2dPreviewFallback').style.display = 'none';
-    }
     element('#live2dName').textContent = live2dConfig.name;
     const events = { signal: this.events.signal };
     this.select.addEventListener('change', () => void this.choose(this.select.value), events);
@@ -77,7 +68,7 @@ export class CharacterLibrary {
     this.label.textContent = selected.label;
     this.wrap.dataset.character = selected.id;
     this.wrap.dataset.renderer = selected.renderer;
-    this.credit.hidden = !live2dConfig.usesSample;
+    this.credit.hidden = selected.renderer !== 'live2d' || !live2dConfig.usesSample;
     this.syncChoices();
     const ready = this.options.stage.ensure(selected.source, () => createCharacterRenderer(selected), sampleRate, state, signal);
     if (this.options.stage.isLoading) this.wrap.dataset.loaded = 'false';
@@ -110,8 +101,6 @@ export class CharacterLibrary {
 
   private syncChoices(): void {
     this.select.value = this.selectedId;
-    this.customModelButton.hidden = !this.catalog.has('custom-model');
-    this.customModelName.textContent = this.catalog.get('custom-model')?.label ?? 'Your model';
     this.customAvatarButton.hidden = !this.customAvatar;
     this.customAvatarName.textContent = this.customAvatar?.name ?? 'Your character';
     for (const choice of this.choices) {
@@ -138,7 +127,6 @@ export class CharacterLibrary {
 
   private async importFile(file: File): Promise<void> {
     if (this.busy) return;
-    if (file.name.toLowerCase().endsWith('.glb')) { await this.importModel(file); return; }
     this.setBusy(true);
     this.status.classList.remove('error', 'success');
     this.status.textContent = `Opening ${file.name}…`;
@@ -165,7 +153,7 @@ export class CharacterLibrary {
           this.catalog.delete('custom');
           this.select.querySelector('option[value="custom"]')?.remove();
         }
-        this.selectedId = previous ? 'custom' : 'niu-lai';
+        this.selectedId = previous ? 'custom' : 'pixel-bot';
         await this.mountCurrentAudio();
         throw error;
       }
@@ -174,33 +162,6 @@ export class CharacterLibrary {
     } catch (error) {
       console.error(error);
       this.showError(error, 'Unable to load this character ZIP.');
-    } finally { this.setBusy(false); this.file.value = ''; }
-  }
-
-  private async importModel(file: File): Promise<void> {
-    if (file.size > 25 * 1024 * 1024) { this.status.textContent = 'Choose a GLB smaller than 25 MB.'; return; }
-    const previous = this.catalog.get('custom-model');
-    const previousSelection = this.selectedId;
-    this.setBusy(true);
-    try {
-      const name = file.name.replace(/\.glb$/i, '');
-      this.catalog.set('custom-model', { id: 'custom-model', renderer: '3d', source: await file.arrayBuffer(),
-        label: name, defaultText: "Hey, I'm Mochi. What's on your mind?" });
-      this.setCustomOption('custom-model', 'Your 3D model');
-      this.selectedId = 'custom-model';
-      await this.mountCurrentAudio();
-      this.options.onSelected(this.selected);
-      this.status.textContent = name + ' loaded locally';
-      this.status.classList.remove('error');
-    } catch (error) {
-      this.selectedId = previousSelection;
-      if (previous) this.catalog.set('custom-model', previous);
-      else {
-        this.catalog.delete('custom-model');
-        this.select.querySelector('option[value="custom-model"]')?.remove();
-      }
-      await this.mount(this.options.currentAudio().sampleRate, CharacterState.Idle);
-      this.showError(error, 'Unable to load this GLB.');
     } finally { this.setBusy(false); this.file.value = ''; }
   }
 

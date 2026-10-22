@@ -26,6 +26,6 @@ for (const [name, entry] of Object.entries(live2dSampleFiles)) {
   sources[name] = { url: entry.url, sha256 };
 }
 await writeFile(resolve(root, 'sources.json'), JSON.stringify({ sources }, null, 2));
-console.log('Verified Live2D sample ready for local development or npm run build:pages.');
+console.log('Verified local Live2D test fixture ready. Enable explicitly with VITE_LIVE2D_SAMPLE=true npm run dev.');
 console.log('This content uses sample data owned and copyrighted by Live2D Inc. Official model/Core license documents are included.');
-console.log('Runtime and model remain excluded from the SDK and source tree.');
+console.log('Runtime and model remain excluded from the public builds, SDK and source tree.');

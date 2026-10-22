@@ -13,7 +13,6 @@ export default defineConfig(({ mode }) => {
     plugins: [live2dSamplePlugin()],
     define: {
       'import.meta.env.HOHO_LIVE2D_SAMPLE': JSON.stringify(hasLive2DSample),
-      'import.meta.env.HOHO_LIVE2D_PAGES': JSON.stringify(mode === 'pages'),
     },
     base: "/hoho-avatar/",
     envDir: repository,
