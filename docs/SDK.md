@@ -1,6 +1,6 @@
 # SDK integration
 
-The SDK is framework-independent ESM with TypeScript declarations. The core entry has no renderer dependency, injects no UI or CSS, and does not connect to an AI service. Canvas, Three.js and Live2D implement the same interface. Three.js and Live2D require their optional peers. All use five heuristic mouth states; this is not phoneme-level lip sync.
+The SDK is framework-independent ESM with TypeScript declarations. The core entry has no renderer dependency, injects no UI or CSS, and does not connect to an AI service. Canvas and Live2D implement the same interface. Live2D requires its optional peers. All use five heuristic mouth states; this is not phoneme-level lip sync.
 
 ## Install the preview
 
@@ -8,7 +8,7 @@ The SDK is framework-independent ESM with TypeScript declarations. The core entr
 npm install @hh1st/hoho-avatar@next --registry=https://registry.npmjs.org
 ```
 
-The API below targets `0.1.0-beta.3`. Upgrading from beta.1 requires explicit renderer selection: replace `createAvatar(canvas, { character })` with `createAvatar(canvas, { renderer: canvasRenderer({ character }) })` and import `canvasRenderer` from `@hh1st/hoho-avatar/canvas`. Three.js and Live2D use the same factory with their corresponding renderer.
+The API below targets `0.1.0-beta.3`. Upgrading from beta.1 requires explicit renderer selection: replace `createAvatar(canvas, { character })` with `createAvatar(canvas, { renderer: canvasRenderer({ character }) })` and import `canvasRenderer` from `@hh1st/hoho-avatar/canvas`. Live2D uses the same factory with their corresponding renderer.
 
 For a local source build, run `npm install` and `npm pack` in the repository, then install `/path/to/hh1st-hoho-avatar-0.1.0-beta.3.tgz` in your application.
 
@@ -87,29 +87,26 @@ const supported = MOUTH_STATES.filter(state => avatar.capabilities.mouth.include
 if (isMouthState(value)) avatar.previewMouth(value);
 ~~~
 
-The values remain closed, small, large, wide and round, preserving existing JSON/asset names. MouthState is an immutable enum-style object with a derived type; MOUTH_STATES is its immutable ordered value list. Renderers do not define their own mouth enums. Blender shape-key names such as mouth_round are renderer mappings, not new states.
+The values remain closed, small, large, wide and round, preserving existing JSON/asset names. MouthState is an immutable enum-style object with a derived type; MOUTH_STATES is its immutable ordered value list. Renderers do not define their own mouth enums.
 
-The package root exports the common Avatar, createAvatar, MotionController, audio primitives and renderer contracts. It imports neither renderer. The /canvas and /three entries export factories with the same RendererFactory signature:
+The package root exports the common Avatar, createAvatar, MotionController, audio primitives and renderer contracts. It imports neither renderer. The `/canvas` and `/live2d` entries export factories with the same RendererFactory signature:
 
 ```ts
 import { createAvatar } from '@hh1st/hoho-avatar';
 import { canvasRenderer } from '@hh1st/hoho-avatar/canvas';
-import { threeRenderer } from '@hh1st/hoho-avatar/three';
 
-const a = await createAvatar(canvasA, {
+const avatar = await createAvatar(canvas, {
   renderer: canvasRenderer({ character: '/characters/pixel-bot/character.json' }),
 });
-const b = await createAvatar(canvasB, {
-  renderer: threeRenderer({ model: '/models/mochi/mochi.glb' }),
-});
-// a and b are both Avatar, with the same methods and lifecycle.
 ```
 
-Only import the implementation your application uses. A Canvas consumer does not need to install Three.js; core and Canvas declarations do not reference its types. Both implementations have ready, capabilities, render, reset, resize, resetView, setViewControlEnabled and destroy. Capabilities report mouth targets, blinking and interactive view support; unsupported view controls are no-ops. Asset formats and constructor configuration differ, while runtime control stays uniform.
+Only import the implementation your application uses. Canvas requires no renderer peers. Both implementations have ready, capabilities, render, reset, resize, resetView, setViewControlEnabled and destroy. Capabilities report mouth targets, blinking and interactive view support; unsupported view controls are no-ops. Asset formats differ while runtime control stays uniform.
 
 Avatar exposes capabilities, setState/getState, previewMouth/previewBlink, resize, resetView, setViewControlEnabled, start/stop and resetAudio alongside its audio methods. stop() pauses animation; stopAudio() releases owned audio. Previews work on both implementations. MotionController generates RenderFrame values and owns the only analysis, blink and animation loop.
 
-Migration: select canvasRenderer({ character }) or threeRenderer({ model }) in the same createAvatar(canvas, { renderer }) call. The old TalkingSprite, TalkingModel and separate 3D avatar factory are replaced by explicit renderer injection. See [the 3D guide](THREE.md) for Blender authoring and model requirements.
+The Studio bundles only Pixel Bot and accepts V1 sprite ZIP imports. The optional Live2D adapter accepts caller-owned Core/model assets; see [the Live2D guide](LIVE2D.md). Three.js, GLB import and Blender authoring have been removed.
+
+Migration: use canvasRenderer({ character }) in createAvatar(canvas, { renderer }), or the optional live2dRenderer({ model, coreUrl }).
 
 ## AI / TTS integration
 
@@ -172,9 +169,9 @@ Do not construct the avatar during server rendering. Importing the package on th
 
 ## Validation and release
 
-The single Studio in `examples/basic/` imports local SDK source for Canvas, Three.js and Live2D. The separate SDK quickstart is a package-consumer fixture used to verify native browser and bundler integration.
+The single Studio in `examples/basic/` imports local SDK source for Canvas and Live2D. The separate SDK quickstart is a package-consumer fixture used to verify native browser and bundler integration.
 
-Run `npm run setup:demo` after installing repository dependencies. `npm run dev`, `npm run dev:all`, and `npm run build` use the checked-out SDK; the only Studio output is `examples/basic/dist/`. GitHub Pages runs `npm run setup:live2d-sample` and `npm run build:pages` to include the official Live2D sample, Core and license notices, then verifies the result with `npm run test:pages`. `npm run build:sdk` and `npm pack` remain separate SDK distribution commands and exclude these assets.
+Run `npm run setup:demo` after installing repository dependencies. `npm run dev`, `npm run dev:all`, and `npm run build` use the checked-out SDK; the only Studio output is `examples/basic/dist/`. GitHub Pages runs `npm run build:pages` and verifies the Pixel Bot Studio with `npm run test:pages`. Additional model fixtures and private working characters are not copied into the public output. `npm run build:sdk` and `npm pack` remain separate SDK distribution commands.
 
 `npm run test:package` builds and inspects the tarball, installs it into a fresh consumer, checks NodeNext types and server-side import, then runs native ESM and Vite production browser checks for character loading, audio-worklet PCM, microphone capture and disposal. See [RELEASING.md](https://github.com/HH1st/hoho-avatar/blob/main/docs/RELEASING.md) before publishing.
 
@@ -194,7 +191,7 @@ Durations are seconds; intensity is finite in [0,1]. Unknown names and invalid o
 
 `holdDuration` adds time at the final reaction pose before recovery. It defaults to zero, which preserves the original animation timing exactly. With `duration: 1.4, holdDuration: 2`, the sequence lasts 3.4 seconds: 0.952s to reach the final pose, a 2s hold, then 0.448s recovery. During the hold, expression progress, gaze, reaction body transform and effect animation are frozen. Worried's sweat reaches its configured final fall position and stays visible there until recovery. Idle sway, automatic blinking and speech continue independently; attached effects still follow the character. Reset and interruption can end a hold early. `holdDuration` must be finite and non-negative; `duration` must remain positive. No character asset or schema change is required.
 
-`RenderFrame.reaction` is optional renderer-independent pose data: expression, progress, weights/layers, body position and rotation, gaze, idle displacement and effect values. `motion` stays audio-only. Custom, Three.js and Live2D renderers may ignore the pose. Optional capabilities `reactions` and `idleMotion` describe support.
+`RenderFrame.reaction` is optional renderer-independent pose data: expression, progress, weights/layers, body position and rotation, gaze, idle displacement and effect values. `motion` stays audio-only. Custom and Live2D renderers may ignore the pose. Optional capabilities `reactions` and `idleMotion` describe support.
 
 Canvas V1 optional metadata includes `renderStyle: 'pixel' | 'smooth'`, `animation.pivot`, `animation.idleSway`, neutral `eyebrows`, and `reactions` sprite overrides. See the bundled character-generation skill's `references/character-format.md`. Smooth art preserves interpolation and fractional placement; legacy characters default to pixel rendering. Facial variants require matching artwork and a clean face base; the renderer does not erase painted facial features. Characters without reaction art retain neutral facial layers and display only supported motion.
 

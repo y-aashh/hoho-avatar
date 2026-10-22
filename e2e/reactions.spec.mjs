@@ -36,8 +36,9 @@ for (const width of [390, 1440]) {
     await page.screenshot({ path: `working/reaction-review/studio-${width}.png`, fullPage: true });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);
-    await page.getByRole('button', { name: /Mochi/ }).click();
-    await expect(page.getByRole('button', { name: 'Worried', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: /Pixel Bot/ }).click();
+    await expect(page.locator('.stage-wrap')).toHaveAttribute('data-loaded', 'true');
+    await expect(page.getByRole('button', { name: 'Worried', exact: true })).toBeEnabled();
   });
 }
 

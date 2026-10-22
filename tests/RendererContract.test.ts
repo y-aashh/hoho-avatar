@@ -1,31 +1,18 @@
 /// <reference types="node" />
-import { readFile } from 'node:fs/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Avatar, createAvatar } from '../src/core/Avatar';
 import { canvasRenderer } from '../src/canvas';
-import { threeRenderer } from '../src/three';
-import type { RendererFactory } from '../src/core/renderer';
 import type { SpriteCharacterDefinition } from '../src/canvas';
 import { MOUTH_STATES } from '../src/core/MouthState';
 import { CharacterState, CHARACTER_STATES } from '../src/core/CharacterState';
 
-vi.mock('three', async (original) => {
-  const actual = await original<typeof import('three')>();
-  return { ...actual, WebGLRenderer: class {
-    shadowMap = { enabled: false, type: 0 };
-    setPixelRatio() {} setSize() {} render() {} dispose() {} forceContextLoss() {}
-  } };
-});
-vi.mock('three/addons/controls/OrbitControls.js', () => ({ OrbitControls: class {
-  target = { set() {} }; update() {} dispose() {}
-} }));
 const character: SpriteCharacterDefinition = {
   version: 1, canvas: { width: 128, height: 128 }, body: { src: 'body.png' },
   mouth: { anchor: { x: 64, y: 70 }, sprites: { closed: 'c.png', small: 's.png', large: 'l.png', wide: 'w.png', round: 'r.png' } },
   eyes: { anchor: { x: 64, y: 30 }, sprites: { open: 'o.png', closed: 'b.png' } },
 };
 
-describe.each(['canvas', 'three'] as const)('%s implements the same Avatar contract', (kind) => {
+describe('Canvas implements the shared Avatar contract', () => {
   beforeEach(() => {
     vi.stubGlobal('document', { baseURI: 'https://example.test/' });
     vi.stubGlobal('Image', class {
@@ -37,10 +24,7 @@ describe.each(['canvas', 'three'] as const)('%s implements the same Avatar contr
   });
   afterEach(() => vi.unstubAllGlobals());
   it('returns exactly Avatar and provides equal creation, motion, previews and disposal', async () => {
-    const file = await readFile('public/models/mochi/mochi.glb');
-    const factory: RendererFactory = kind === 'canvas' ? canvasRenderer({ character }) : threeRenderer({
-      model: file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer,
-    });
+    const factory = canvasRenderer({ character });
     const context = { clearRect: vi.fn(), drawImage: vi.fn() };
     const canvas = { getContext: () => context, addEventListener: vi.fn(), removeEventListener: vi.fn(),
       getBoundingClientRect: () => ({ width: 640, height: 480 }),
@@ -51,7 +35,7 @@ describe.each(['canvas', 'three'] as const)('%s implements the same Avatar contr
     await avatar.ready;
     expect(avatar.capabilities.mouth).toEqual(MOUTH_STATES);
     expect(avatar.capabilities.blink).toBe(true);
-    expect(avatar.capabilities.viewControl).toBe(kind === 'three');
+    expect(avatar.capabilities.viewControl).toBe(false);
     avatar.resize(); avatar.resetView(); avatar.setViewControlEnabled(false);
     expect(avatar.getState()).toBe(CharacterState.Idle);
     for (const state of CHARACTER_STATES) {

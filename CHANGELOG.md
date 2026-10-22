@@ -2,9 +2,10 @@
 
 ## Unreleased
 
+- Make Pixel Bot the only bundled public character; remove Niu Lai, Pixel Portrait and Mochi assets.
+- Remove Three.js/GLB support, Blender authoring tools and the optional `/three` package entry and dependencies.
+- Keep the public Pages build free of extra model fixtures; Live2D remains available for caller-owned models and explicit local fixture verification.
 - Replace the short audio sample with a complete English greeting.
-- Frame the Live2D sample around its artwork and show a rendered character portrait in the Studio picker. Reset view restores the larger framing.
-- Enable the Live2D sample on GitHub Pages using checksum-verified official assets, same-origin URLs, retained notices and production-browser smoke tests. SDK contents remain unchanged.
 
 ## 0.1.0-beta.3 — 2026-09-11
 

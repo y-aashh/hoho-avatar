@@ -45,8 +45,8 @@ test("character cards, import, and sample shortcut operate the studio", async ({
   await expect(page.locator("#customAvatarButton")).toBeVisible();
   await expect(page.locator("#customAvatarButton")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#stageLabel")).toHaveText("my-character");
-  await page.getByRole("button", { name: /Niu Lai/ }).click();
-  await expect(page.locator("#stageLabel")).toHaveText("Niu Lai");
+  await bot.click();
+  await expect(page.locator("#stageLabel")).toHaveText("Pixel Bot");
   await page.locator("#demoSampleButton").click();
   await expect(page.locator("#tab-file")).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("#statusText")).toHaveText("AUDIO LIVE");

@@ -4,21 +4,15 @@ Hoho Avatar is an open-source toolkit for building speaking and audio-reactive a
 
 **[Try the live microphone and local audio demo](https://hh1st.github.io/hoho-avatar/)**
 
-![Niu Lai reacting to voice with Hoho Avatar](https://raw.githubusercontent.com/HH1st/hoho-avatar/main/docs/images/niu-lai-talking.gif)
-
-Click **Try a sample** in the live demo to see Niu Lai react immediately—no microphone permission or audio file required.
-
-![Hoho Avatar Studio with its charcoal and coral interface, character cards, and voice controls](https://raw.githubusercontent.com/HH1st/hoho-avatar/main/docs/images/niu-lai-demo.png)
-
-_The redesigned Avatar Studio: a charcoal stage, coral accents, character cards, and four voice modes._
+Click **Try a sample** in the live demo to see Pixel Bot react immediately—no microphone permission or audio file required.
 
 The project currently ships a browser-first TypeScript engine that analyzes streaming PCM audio, selects five mouth states, adds automatic blinking, and renders layered PNG characters with Canvas 2D. The demo accepts microphone input, a local audio file, locally generated English speech from KittenTTS, or an optional Azure Realtime voice-agent session. Local audio analysis, file decoding, and KittenTTS stay in the browser; Voice Agent mode explicitly sends microphone audio to the configured Azure OpenAI resource.
 
-The SDK includes optional Three.js and Live2D renderers through the same renderer interface. Run `npm run dev` and select **Mochi (3D)** in the same Studio to try the Blender-built 3D character. See the [3D guide](docs/THREE.md) and [Live2D integration](docs/LIVE2D.md). Other engines remain roadmap items.
+The SDK also includes an optional [Live2D adapter](docs/LIVE2D.md) for caller-owned Core and model assets. Pixel Bot is the only bundled public character.
 
 ## Use the SDK
 
-**`@hh1st/hoho-avatar`** is a framework-independent SDK with ESM, TypeScript declarations, no required runtime dependencies, and an included original Pixel Bot character. Version `0.1.0-beta.3` adds explicit renderer selection with Canvas, Three.js and Live2D entries. Three.js and Live2D require their optional peers; Live2D Core and model assets are supplied separately.
+**`@hh1st/hoho-avatar`** is a framework-independent SDK with ESM, TypeScript declarations, no required runtime dependencies, and an included original Pixel Bot character. The source uses explicit renderer selection with Canvas and Live2D entries. Live2D requires its optional peers; Live2D Core and model assets are supplied separately.
 
 ```bash
 npm install @hh1st/hoho-avatar@next --registry=https://registry.npmjs.org
@@ -60,7 +54,7 @@ npm run dev
 
 Open the URL shown by Vite and press **Try a sample**. Everything runs locally in the browser.
 
-The single Studio in `examples/basic/` imports the checked-out SDK source. Select a 2D character, **Mochi (3D)** or **Wankoromochi (Live2D)** in the same character library; microphone, files, TTS and voice conversations share the same controls. Three.js and Live2D load only when selected. Run `npm run setup:live2d-sample` and restart the dev server to enable Wankoromochi locally. GitHub Pages includes the official sample through `npm run build:pages`; see the [Live2D guide](docs/LIVE2D.md). Run `npm run setup:quickstart` to build and install the current tarball in the isolated quickstart.
+The Studio in `examples/basic/` imports the checked-out SDK source. Pixel Bot is the default and only bundled character; import a V1 character ZIP to use your own artwork. Microphone, files, TTS and voice conversations share the same controls. A caller-owned Live2D model can be configured explicitly; see the [Live2D guide](docs/LIVE2D.md). GitHub Pages ships the same Pixel Bot Studio without additional model fixtures. Run `npm run setup:quickstart` to build and install the current tarball in the isolated quickstart.
 
 ## Built for voice agents
 
@@ -76,16 +70,10 @@ Hoho Avatar sits after your audio source: feed it mono PCM from a realtime model
 | Part | Location | Purpose |
 | --- | --- | --- |
 | Canvas 2D engine | `src/` | PCM analysis, mouth classification, blinking, asset loading, and Canvas rendering |
-| Demo and assets | `examples/basic/`, `public/characters/` | Microphone and local-file playback with three engine-ready example characters |
-| Asset Skills | `skills/generate-talking-sprite-character/`, `skills/generate-threejs-avatar/` | Codex workflows for creating, validating, and integrating 2D sprites and 3D GLB avatars |
+| Demo and assets | `examples/basic/`, `public/characters/` | Microphone and local-file playback with the Pixel Bot example character |
+| Asset Skills | `skills/generate-talking-sprite-character/` | Codex workflow for creating, validating, and integrating 2D sprites |
 
-The bundled example characters are:
-
-- `niu-lai` — the default reference-guided orange bovine character.
-- `pixel-bot` — the retro robot character.
-- `pixel-portrait` — a front-facing pixel-art portrait.
-
-See [ASSETS.md](https://github.com/HH1st/hoho-avatar/blob/main/ASSETS.md) for their licensing and provenance notes.
+The bundled example is `pixel-bot`, the retro robot character. See [ASSETS.md](ASSETS.md) for licensing and provenance.
 
 ## Run from source
 
@@ -93,7 +81,7 @@ Select a character and press **Start microphone** for live input, **Try a sample
 
 ### Load a custom character
 
-The demo accepts a `.zip` containing one V1 2D character directory, or an embedded `.glb` 3D model. Select **Import avatar** or drop the archive onto the avatar stage; the package is validated, unpacked, and rendered entirely inside the browser.
+The demo accepts a `.zip` containing one V1 2D character directory. Select **Import avatar** or drop the archive onto the avatar stage; the package is validated, unpacked, and rendered entirely inside the browser.
 
 Imports are limited to 25 MB compressed, 75 MB of extracted character files, and 1,024 archive entries. Sizes are checked before and during extraction; duplicate asset paths are rejected.
 
@@ -113,16 +101,14 @@ Use the SDK package for integration. The browser studio and optional Azure gatew
 
 ## One Avatar API, renderer implementations
 
-The package root contains the renderer-neutral createAvatar, Avatar, MotionController and audio tools. Canvas and Three.js implement the same AvatarRenderer contract and are selected explicitly:
+The package root contains the renderer-neutral createAvatar, Avatar, MotionController and audio tools. Canvas and Live2D implement the same AvatarRenderer contract and are selected explicitly:
 
 ```ts
 import { createAvatar } from '@hh1st/hoho-avatar';
 import { canvasRenderer } from '@hh1st/hoho-avatar/canvas';
-// For 3D, import { threeRenderer } from '@hh1st/hoho-avatar/three';
 
 const avatar = await createAvatar(canvas, {
   renderer: canvasRenderer({ character: '/characters/pixel-bot/character.json' }),
-  // Or: renderer: threeRenderer({ model: '/models/mochi/mochi.glb' }),
   sampleRate: 48_000,
 });
 avatar.pushPCM(float32Chunk);
@@ -133,7 +119,7 @@ const unsubscribe = avatar.onMotion(frame => console.log(frame.mouth));
 // unsubscribe(); await avatar.destroy();
 ```
 
-Both implementations return the same Avatar. Read capabilities for supported expressions and view controls. The core has no renderer dependency; Canvas consumers do not install Three.js. The Three.js implementation requires the optional three peer. See [the SDK guide](docs/SDK.md) for the interface and [the Blender/Three.js guide](docs/THREE.md) for GLB authoring.
+Both implementations return the same Avatar. Read capabilities for supported expressions and view controls. The core has no renderer dependency; Canvas consumers do not install Live2D's optional peers. See [the SDK guide](docs/SDK.md) for the interface and [the Live2D guide](docs/LIVE2D.md) for caller-owned models.
 
 MotionController consumes mono PCM and produces RenderFrame, including mouth/energy, blink, interaction state and timing. Renderers draw those frames and manage their own assets/GPU resources. Audio acquisition and playback remain separate; match the processing sample rate when supplying external PCM.
 
@@ -297,27 +283,17 @@ python -m pip install -r skills/generate-talking-sprite-character/requirements.t
 
 Image generation also requires an ImageGen capability when a character body does not already exist.
 
-For 3D characters, use [generate-threejs-avatar](skills/generate-threejs-avatar/SKILL.md):
-
-```text
-Use $generate-threejs-avatar from skills/generate-threejs-avatar
-to create a friendly 3D astronaut cat with speaking mouth shapes and blinking.
-Keep the Blender source and GLB under working/models/ and validate local import.
-```
-
-This Skill follows the existing Blender/Three.js model contract, reviews exported expressions, and supports optional demo integration. Blender is required for authoring; working-only avatars load directly as GLB files through **Import avatar**.
-
 ## Development
 
 ```bash
 npm run setup:demo # Install the demo dependencies from its lockfile
-npm run dev        # Start the unified Canvas/Three.js/Live2D Studio from source
+npm run dev        # Start the Pixel Bot Studio from source
 npm run typecheck  # Type-check source, examples, and tests
 npm run lint       # Check JS/TS correctness with Oxlint
 npm test           # Run deterministic engine and audio-player tests
 npm run build      # Build the demo into examples/basic/dist
-npm run setup:live2d-sample # Download and verify official Live2D sample assets
-npm run build:pages # Build the demo with the Live2D sample and license notices
+npm run setup:live2d-sample # Download an optional local Live2D test fixture
+npm run build:pages # Build the Pixel Bot demo for GitHub Pages
 npm run test:pages  # Check the production Pages build in Chromium
 npm run build:sdk  # Build SDK ESM, declarations and assets
 npm run test:package # Install and test the SDK tarball in an independent app
@@ -341,13 +317,11 @@ src/
 ├── audio-source/ # Local-file playback and AudioWorklet PCM output
 ├── core/        # Avatar API, renderer contracts and shared motion
 ├── canvas/      # Sprite format, assets and painting
-└── three/       # GLB loading and morph rendering
+└── live2d/      # Optional caller-owned Live2D model rendering
 
 examples/basic/  # Browser microphone demo
 public/characters/
-├── niu-lai/
-├── pixel-bot/
-└── pixel-portrait/
+└── pixel-bot/
 
 skills/generate-talking-sprite-character/
 ├── SKILL.md
@@ -370,12 +344,12 @@ microphone / audio file / TTS
         mono Float32 PCM
               |
               v
- PCMAnalyzer -> MouthClassifier -> MotionController -> AvatarRenderer (Canvas / Three.js)
+ PCMAnalyzer -> MouthClassifier -> MotionController -> AvatarRenderer (Canvas / Live2D)
                                       |
                                BlinkController
 ```
 
-`audio-source/` owns browser playback and emits PCM without depending on avatar rendering. `audio/` is DOM-independent signal processing. `core/` defines renderer-neutral orchestration. `canvas/` owns the sprite format, validation, image loading and painting; `three/` owns GLB rendering. Keep new integrations on these boundaries: audio providers should emit PCM, classifiers should emit `MotionFrame`, and renderers should consume motion rather than control playback.
+`audio-source/` owns browser playback and emits PCM without depending on avatar rendering. `audio/` is DOM-independent signal processing. `core/` defines renderer-neutral orchestration. `canvas/` owns the sprite format, validation, image loading and painting; `live2d/` owns Cubism rendering. Keep new integrations on these boundaries: audio providers should emit PCM, classifiers should emit `MotionFrame`, and renderers should consume motion rather than control playback.
 
 ## Privacy and browser support
 
@@ -398,7 +372,7 @@ Current release:
 
 The current engine is not phoneme-level lip sync, a skeletal animation system, or a general-purpose audio recording library.
 
-The source includes Three.js and Live2D adapters consuming shared audio-driven motion. Three.js uses GLB morph targets; Live2D uses Cubism parameters. Skeletal retargeting and other renderer integrations remain future work.
+The optional Live2D adapter consumes shared audio-driven motion through Cubism parameters. Three.js, GLB import and Blender authoring are not supported.
 
 SDK packaging and consumer validation are implemented. Preview releases use the public npm `next` tag; see [release instructions](https://github.com/HH1st/hoho-avatar/blob/main/docs/RELEASING.md) and [remaining work](https://github.com/HH1st/hoho-avatar/blob/main/docs/BACKLOG.md).
 

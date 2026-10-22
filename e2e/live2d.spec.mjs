@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 import { hasLive2DSample } from '../examples/basic/live2dSample.mjs';
 
 test.describe('Live2D official local fixture', () => {
-  test.skip(!hasLive2DSample, 'Run npm run setup:live2d-sample to enable actual Cubism verification.');
+  test.skip(!hasLive2DSample || process.env.VITE_LIVE2D_SAMPLE !== 'true',
+    'Run npm run setup:live2d-sample and set VITE_LIVE2D_SAMPLE=true for explicit local Cubism verification.');
   test('shares the same page, expressions, audio and cleanup as other renderers', async ({ page }) => {
     const errors = []; const resources = [];
     page.on('pageerror', (error) => errors.push(error.message));

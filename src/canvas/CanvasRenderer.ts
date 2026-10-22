@@ -7,7 +7,7 @@ import { SpritePainter } from './SpritePainter';
 
 export interface CanvasRendererOptions { character: string | SpriteCharacterDefinition; }
 
-/** Canvas implementation of the same renderer contract used by Three.js. */
+/** Canvas implementation of the shared renderer contract. */
 export class CanvasRenderer implements AvatarRenderer {
   reactionOptions?: ReactionControllerOptions;
   readonly ready: Promise<void>;

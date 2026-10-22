@@ -74,7 +74,7 @@ class CharacterToolsTest(unittest.TestCase):
 
     def test_legacy_bundled_characters(self):
         repo = SCRIPTS.parents[2]
-        for name in ("pixel-bot", "pixel-portrait", "niu-lai"):
+        for name in ("pixel-bot",):
             config = repo / "public" / "characters" / name / "character.json"
             validate_definition(json.loads(config.read_text()), config.parent)
 

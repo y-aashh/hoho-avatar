@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { spritePackage } from "./character-fixture.mjs";
 
 async function expectPreviewAndControl(page, selector) {
   await expect.poll(() => page.evaluate((selector) => {
@@ -88,6 +89,8 @@ test("a reduced viewport leaves text entry and the avatar usable together", asyn
 test("choosing another character keeps its live preview visible above the cast", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("./");
+  await page.locator('#avatarFile').setInputFiles(spritePackage());
+  await expect(page.locator('#uploadStatus')).toContainText('my-character loaded locally');
   const selector = ".character-choice[data-avatar=\"pixel-bot\"]";
   await page.locator(selector).click();
   await expect(page.locator("#stageLabel")).toHaveText("Pixel Bot");

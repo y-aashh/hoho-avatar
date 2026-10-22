@@ -21,7 +21,7 @@ export interface RendererCapabilities {
   readonly viewControl: boolean;
 }
 
-/** Equal contract for Canvas, Three.js and application-provided renderers.
+/** Equal contract for Canvas, Live2D and application-provided renderers.
  * Optional visual features are reported through capabilities; their controls
  * remain callable and are no-ops when unsupported. destroy() is idempotent.
  */

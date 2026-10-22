@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { loadSpriteCharacterPackage } from "../examples/basic/characterPackage";
 
 describe("bundled character ZIP import", () => {
-  it.each(["niu-lai", "pixel-bot", "pixel-portrait"])("preserves %s image bytes", async (name) => {
+  it.each(["pixel-bot"])("preserves %s image bytes", async (name) => {
     const directory = new URL(`../public/characters/${name}/`, import.meta.url);
     const files = Object.fromEntries(readdirSync(directory).map((file) => [
       `${name}/${file}`, new Uint8Array(readFileSync(new URL(file, directory))),

@@ -93,7 +93,7 @@ export class StageView {
     }, options);
   }
 
-  show(avatar: Avatar, live2d: boolean): void {
+  show(avatar: Avatar): void {
     this.unsubscribe?.();
     this.avatar = avatar;
     element<HTMLFieldSetElement>('#reactionControls').disabled = !avatar.capabilities.reactions?.length;
@@ -109,7 +109,7 @@ export class StageView {
     this.wrap.dataset.loaded = 'true';
     this.tools.hidden = false;
     this.viewHint.textContent = avatar.capabilities.viewControl
-      ? (live2d ? 'Scroll to zoom' : 'Drag to orbit, scroll to zoom') : 'Preview expressions';
+      ? 'Scroll to zoom' : 'Preview expressions';
     this.resetView.hidden = !avatar.capabilities.viewControl;
     for (const { state, button } of this.mouthButtons) {
       button.disabled = !avatar.capabilities.mouth.includes(state);

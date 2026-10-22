@@ -50,14 +50,12 @@
     "@pixi/unsafe-eval": "6.5.10",
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.2",
-    "@types/three": "^0.185.4",
     "fflate": "^0.8.2",
     "kitten-tts-webgpu": "^0.1.1",
     "magic-string": "^0.30.21",
     "oxlint": "1.82.0",
     "pixi-live2d-display": "0.4.0",
     "pixi.js": "6.5.10",
-    "three": "^0.185.1",
     "typescript": "^7.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.10",
@@ -75,10 +73,6 @@
       "types": "./dist-sdk/characters/pixel-bot.d.ts",
       "import": "./dist-sdk/characters/pixel-bot.js"
     },
-    "./three": {
-      "types": "./dist-sdk/types/three/index.d.ts",
-      "import": "./dist-sdk/three.js"
-    },
     "./canvas": {
       "types": "./dist-sdk/types/canvas/index.d.ts",
       "import": "./dist-sdk/canvas.js"
@@ -94,7 +88,6 @@
     "README.md",
     "LICENSE",
     "docs/SDK.md",
-    "docs/THREE.md",
     "docs/LIVE2D.md",
     "CHANGELOG.md"
   ],
@@ -104,18 +97,16 @@
   "peerDependencies": {
     "@pixi/unsafe-eval": "6.5.10",
     "pixi-live2d-display": "^0.4.0",
-    "pixi.js": "^6.5.10",
-    "three": "^0.185.0"
+    "pixi.js": "^6.5.10"
   },
   "peerDependenciesMeta": {
-    "@pixi/unsafe-eval": { "optional": true },
+    "@pixi/unsafe-eval": {
+      "optional": true
+    },
     "pixi.js": {
       "optional": true
     },
     "pixi-live2d-display": {
-      "optional": true
-    },
-    "three": {
       "optional": true
     }
   },
