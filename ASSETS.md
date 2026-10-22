@@ -1,8 +1,10 @@
 # Example asset licensing
 
-Pixel Bot is the only bundled public character and the only artwork included in the distributable SDK, copied into `dist-sdk/characters/pixel-bot/` with its MIT license. Recordings and phonemizer data are excluded from the npm file allowlist.
+The public showcase includes Pixel Bot and Mira. Pixel Bot remains the only artwork included in the distributable SDK, copied into `dist-sdk/characters/pixel-bot/` with its MIT license. Recordings and phonemizer data are excluded from the npm file allowlist.
 
 `public/characters/pixel-bot` is original project artwork under the repository's [MIT License](LICENSE). Its optional reaction eyes, eyebrows, delighted mouth and transparent sweat-drop PNG are original procedurally authored pixel layers under the same license.
+
+`public/characters/mira` is original text-guided artwork generated with OpenAI ImageGen for this public showcase, following `skills/generate-talking-sprite-character/SKILL.md` in smooth mode. Matching edited facial artwork supplies all five speech mouths, blinking, three reactions and a separate sweat-drop PNG. No reference photographs or third-party character designs were used. The Mira asset set is distributed under the repository MIT license; its own `LICENSE` and generation notes are included with the assets.
 
 Contributors adding an example character must own the artwork or have explicit redistribution rights. Document its source and license here. Do not commit private reference images, temporary generations, or assets whose redistribution terms are unclear. Private characters under `working/characters/` are not public demo assets.
 

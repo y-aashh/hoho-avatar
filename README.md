@@ -8,7 +8,7 @@ Click **Try a sample** in the live demo to see Pixel Bot react immediately—no 
 
 The project currently ships a browser-first TypeScript engine that analyzes streaming PCM audio, selects five mouth states, adds automatic blinking, and renders layered PNG characters with Canvas 2D. The demo accepts microphone input, a local audio file, locally generated English speech from KittenTTS, or an optional Azure Realtime voice-agent session. Local audio analysis, file decoding, and KittenTTS stay in the browser; Voice Agent mode explicitly sends microphone audio to the configured Azure OpenAI resource.
 
-The SDK also includes an optional [Live2D adapter](docs/LIVE2D.md) for caller-owned Core and model assets. Pixel Bot is the only bundled public character.
+The SDK also includes an optional [Live2D adapter](docs/LIVE2D.md) for caller-owned Core and model assets. Pixel Bot is the default; Mira is the smooth illustrated public showcase character.
 
 ## Use the SDK
 
@@ -54,7 +54,7 @@ npm run dev
 
 Open the URL shown by Vite and press **Try a sample**. Everything runs locally in the browser.
 
-The Studio in `examples/basic/` imports the checked-out SDK source. Pixel Bot is the default and only bundled character; import a V1 character ZIP to use your own artwork. Microphone, files, TTS and voice conversations share the same controls. A caller-owned Live2D model can be configured explicitly; see the [Live2D guide](docs/LIVE2D.md). GitHub Pages ships the same Pixel Bot Studio without additional model fixtures. Run `npm run setup:quickstart` to build and install the current tarball in the isolated quickstart.
+The Studio in `examples/basic/` imports the checked-out SDK source. Pixel Bot remains the default, alongside Mira, the smooth illustrated presenter; import a V1 character ZIP to use your own artwork. Microphone, files, TTS and voice conversations share the same controls. A caller-owned Live2D model can be configured explicitly; see the [Live2D guide](docs/LIVE2D.md). GitHub Pages ships the same Pixel Bot Studio without additional model fixtures. Run `npm run setup:quickstart` to build and install the current tarball in the isolated quickstart.
 
 ## Built for voice agents
 
@@ -73,7 +73,7 @@ Hoho Avatar sits after your audio source: feed it mono PCM from a realtime model
 | Demo and assets | `examples/basic/`, `public/characters/` | Microphone and local-file playback with the Pixel Bot example character |
 | Asset Skills | `skills/generate-talking-sprite-character/` | Codex workflow for creating, validating, and integrating 2D sprites |
 
-The bundled example is `pixel-bot`, the retro robot character. See [ASSETS.md](ASSETS.md) for licensing and provenance.
+The public examples are `pixel-bot`, the retro robot default, and `mira`, a smooth illustrated presenter with matching blink, speech and reaction layers. See [ASSETS.md](ASSETS.md) for licensing and provenance.
 
 ## Run from source
 
@@ -321,7 +321,8 @@ src/
 
 examples/basic/  # Browser microphone demo
 public/characters/
-└── pixel-bot/
+├── pixel-bot/
+└── mira/
 
 skills/generate-talking-sprite-character/
 ├── SKILL.md

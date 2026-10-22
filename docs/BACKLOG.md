@@ -36,6 +36,6 @@ The repository and `examples/basic/` commit public-registry lockfiles. CI instal
 
 ## Renderer support
 
-Canvas and optional Live2D adapters share one Avatar API, RenderFrame and audio owner. Pixel Bot is the only bundled public character. Caller-owned V1 sprite ZIPs and configured Live2D models remain supported.
+Canvas and optional Live2D adapters share one Avatar API, RenderFrame and audio owner. Pixel Bot is the default; Mira is the smooth illustrated public showcase character. Caller-owned V1 sprite ZIPs and configured Live2D models remain supported.
 
 Three.js, GLB import and Blender authoring have been removed from the supported source and package entries. Private working characters are outside the public asset library.

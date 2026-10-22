@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Mira, an original smooth illustrated public showcase character with matching speech, blink and reaction assets; retain Pixel Bot as the default.
+
 - Make Pixel Bot the only bundled public character; remove Niu Lai, Pixel Portrait and Mochi assets.
 - Remove Three.js/GLB support, Blender authoring tools and the optional `/three` package entry and dependencies.
 - Keep the public Pages build free of extra model fixtures; Live2D remains available for caller-owned models and explicit local fixture verification.

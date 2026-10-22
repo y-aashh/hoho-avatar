@@ -15,14 +15,14 @@ test.beforeEach(async ({ page }) => {
     window.AudioContext = class extends Context { constructor(...args) { super(...args); window.testContexts.push(this); } };
   });
 });
-test('only Pixel Bot is bundled, including when opening a removed character link', async ({ page }) => {
+test('Pixel Bot remains the default alongside Mira, including removed character links', async ({ page }) => {
   const requests = []; page.on('request', request => requests.push(request.url()));
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   for (const id of ['', 'niu-lai', 'pixel-portrait', 'mochi', 'live2d']) {
     await page.goto(id ? './?character=' + id : './');
     await expect(page.locator('.stage-wrap')).toHaveAttribute('data-loaded', 'true');
     await expect(page.locator('#stageLabel')).toHaveText('Pixel Bot');
-    await expect(page.locator('.character-choice:visible')).toHaveCount(1);
+    await expect(page.locator('.character-choice:visible')).toHaveCount(2);
     await expect(page.locator('[data-avatar="pixel-bot"]')).toHaveAttribute('aria-pressed', 'true');
   }
   expect(requests.filter(url => /characters\/(?:niu-lai|pixel-portrait)|models\/|three(?:\.js|\/|\.module)|Wanko|live2dcubismcore/.test(url))).toEqual([]);
