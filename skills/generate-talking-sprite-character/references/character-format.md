@@ -80,6 +80,8 @@ Optional additions (merge with required fields above):
 }
 ```
 
+Runtime behaviors `aha` and `curious` need no additional fields or assets. Aha reuses available impressed sprites with their anchors; Curious reuses Look Up eyes and Impressed eyebrows with their respective anchors, keeping the normal mouth. If Look Up eyes are absent, it tries Impressed eyes before falling back to neutral. Explicit Curious feature overrides take priority. Optional overrides under these names follow the same feature/anchor rules and can reference existing PNGs. All V1 packages remain valid without these entries. The renderer applies whole-character motion, with a small uniform scale increase for Curious, around the existing pivot.
+
 Idle distances use a 512-unit reference canvas and scale by width/height; angles and frequency do not scale. Explicit `fallPx`, effect `width`/`height`, `bodyBouncePx`, pivots and anchors use declared canvas units. Omitting `fallPx` scales the default 45px fall. Declared idle settings enable sway initially; otherwise enable using `avatar.setIdleMotion(true)`.
 
 Per-reaction `eyesAnchor`, `eyebrowsAnchor`, `mouthAnchor` override their neutral layer centers. Eyebrow variants require neutral eyebrows art. All optional art must be transparent PNG with matching anatomy. Missing undeclared sprites fall back to neutral. Declared missing files fail loading. ZIP packages must include all referenced assets, using safe relative paths with no parent traversal. URL-loaded definitions may use http(s) URLs and imported in-memory definitions use blob URLs.

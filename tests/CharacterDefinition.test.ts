@@ -22,6 +22,12 @@ describe("parseSpriteCharacterDefinition", () => {
   it("accepts a complete character definition", () => {
     expect(parseSpriteCharacterDefinition(validCharacter())).toEqual(validCharacter());
   });
+  it.each(['aha', 'curious'])('allows optional %s overrides without requiring them on legacy V1 characters', name => {
+    expect(parseSpriteCharacterDefinition(validCharacter()).reactions).toBeUndefined();
+    const definition = { ...validCharacter(), reactions: { [name]: { mouth: 'wide.png' } } };
+    expect(parseSpriteCharacterDefinition(definition)).toEqual(definition);
+    expect(() => parseSpriteCharacterDefinition({ ...definition, reactions: { [name]: { eyes: '../bad.png' } } })).toThrow('path');
+  });
 
   it.each(MOUTH_STATES)("rejects missing %s sprite at the engine boundary", (state) => {
     const character = validCharacter();

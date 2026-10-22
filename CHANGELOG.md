@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Aha and Curious reactions through the existing controller and Studio controls; reuse current character artwork with speech/blink priority and optional whole-character scale.
+
 - Add Arthur, an original smooth illustrated public storyteller with registered glasses, silver hair, beard, speech, blink and reaction artwork.
 
 - Add Mira, an original smooth illustrated public showcase character with matching speech, blink and reaction assets; retain Pixel Bot as the default.

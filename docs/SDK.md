@@ -182,6 +182,8 @@ avatar.triggerReaction('worried');
 avatar.triggerReaction('worried', { duration: 1.4, holdDuration: 2 });
 avatar.triggerReaction('look_up', { duration: 1.2, intensity: 0.8 });
 avatar.triggerReaction('impressed', { interrupt: false });
+avatar.triggerReaction('aha'); // 1.0s realization, reuses impressed art
+avatar.triggerReaction('curious', { duration: 1.8, intensity: 0.7 });
 avatar.setIdleMotion(true);
 avatar.resetReaction(); // 220ms recovery, leaves idle motion enabled
 avatar.setIdleMotion(false); // damped settling
@@ -191,7 +193,9 @@ Durations are seconds; intensity is finite in [0,1]. Unknown names and invalid o
 
 `holdDuration` adds time at the final reaction pose before recovery. It defaults to zero, which preserves the original animation timing exactly. With `duration: 1.4, holdDuration: 2`, the sequence lasts 3.4 seconds: 0.952s to reach the final pose, a 2s hold, then 0.448s recovery. During the hold, expression progress, gaze, reaction body transform and effect animation are frozen. Worried's sweat reaches its configured final fall position and stays visible there until recovery. Idle sway, automatic blinking and speech continue independently; attached effects still follow the character. Reset and interruption can end a hold early. `holdDuration` must be finite and non-negative; `duration` must remain positive. No character asset or schema change is required.
 
-`RenderFrame.reaction` is optional renderer-independent pose data: expression, progress, weights/layers, body position and rotation, gaze, idle displacement and effect values. `motion` stays audio-only. Custom and Live2D renderers may ignore the pose. Optional capabilities `reactions` and `idleMotion` describe support.
+`RenderFrame.reaction` is optional renderer-independent pose data: expression, progress, weights/layers, body position and rotation, optional uniform `scale` (default 1), gaze, idle displacement and effect values. `motion` stays audio-only. Custom and Live2D renderers may ignore the pose. Optional capabilities `reactions` and `idleMotion` describe support.
+
+`aha` defaults to 1.0s: anticipation, lift, quick bounce and approving nod. It reuses each available impressed facial sprite and its anchor, falling back to neutral art. `curious` defaults to 1.8s: a deliberate whole-character tilt up to 4°, a uniform 1.8% lean-in and a small horizontal shift. It reuses Look Up eyes for an attentive upper-left glance and raised Impressed eyebrows, keeping the normal mouth. If Look Up eyes are absent, it tries Impressed eyes, then neutral. Each reused sprite retains its original anchor; explicit Curious overrides take priority. It reduces idle sway during the pose and restores it during recovery. Neither requires new PNGs or metadata; all existing public and imported V1 characters work unchanged. Optional `aha`/`curious` overrides can reference existing sprites. Their additional `holdDuration` starts at 60% and 75% of motion duration respectively; existing reactions retain their 68% hold point. These are whole-character 2D transforms, not separately rigged head motion.
 
 Canvas V1 optional metadata includes `renderStyle: 'pixel' | 'smooth'`, `animation.pivot`, `animation.idleSway`, neutral `eyebrows`, and `reactions` sprite overrides. See the bundled character-generation skill's `references/character-format.md`. Smooth art preserves interpolation and fractional placement; legacy characters default to pixel rendering. Facial variants require matching artwork and a clean face base; the renderer does not erase painted facial features. Characters without reaction art retain neutral facial layers and display only supported motion.
 

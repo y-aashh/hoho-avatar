@@ -60,6 +60,7 @@ describe("Canvas renderer", () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => definition }));
     const renderer = new CanvasRenderer(canvas, { character: 'characters/a/character.json' });
     await renderer.ready;
+    expect(renderer.capabilities.reactions).toEqual(['worried', 'look_up', 'impressed', 'aha', 'curious']);
     expect(paths).toContain('https://example.test/app/characters/a/sweat.png');
     renderer.reset(); renderer.reset();
     expect(paths.filter(p => p.endsWith('sweat.png'))).toHaveLength(1);
