@@ -1,15 +1,15 @@
 ---
 name: generate-talking-sprite-character
-description: Generate, configure, validate, and integrate layered 2D character assets for this repository's TalkingSprite PCM-driven Canvas engine, either from a text-only character description or from reference images. Use when a user asks to invent a speaking character, turn an idea or image into an avatar, produce pixel-art body/eye/mouth PNG layers, write character.json, preview mouth and blink states, add a character to public/characters, or make the demo load a new TalkingSprite character.
+description: Generate, configure, validate, and integrate layered 2D character assets for this repository's createAvatar/canvasRenderer PCM-driven Canvas engine, either from a text-only character description or from reference images. Use when a user asks to invent a speaking character, turn an idea or image into an avatar, produce pixel or smooth body/eye/mouth and reaction PNG layers, write character.json, preview mouth and blink states, add a character to public/characters, or make the demo load a new Canvas character.
 ---
 
 # Generate Talking Sprite Character
 
-Create an engine-ready character set from a description or reference image. Default to coarse pixel art because discrete mouth switching is part of the engine's visual language.
+Create an engine-ready character set from a description or reference image. Choose pixel or smooth artwork explicitly. Preserve the source visual language; mouth switching does not require pixel art.
 
 ## Locate the project
 
-Find the repository root containing `src/core/TalkingSprite.ts` and `public/characters/`. Set:
+Find the repository root containing `src/core/Avatar.ts` and `public/characters/`. Set:
 
 - `<repo>`: repository root
 - `<skill>`: this skill directory
@@ -30,6 +30,7 @@ python -m pip install -r "<skill>/requirements.txt"
 
 Establish:
 
+- artwork mode: pixel for intentionally blocky art; smooth for high-resolution illustration;
 - source mode: text-only concept, reference-guided generation, or exact-image edit;
 - delivery stage: working-only or explicitly published/demo-integrated;
 - view: front-facing by default, or profile when explicitly requested;
@@ -51,8 +52,8 @@ Choose the matching recipe in [references/prompt-recipes.md](references/prompt-r
 
 Generate one square base image with:
 
-- open eyes already present and consistent with the source description or reference image's visual language;
-- a completely blank mouth region;
+- for new reaction-enabled art, a clean face with eyes, eyebrows and mouth in replaceable layers; for legacy overlay-only art, preserve painted eyes and prepare matching inpainted blink regions;
+- a mouth-free base with the original skin/beard texture preserved;
 - clear empty face color around eyes for blink overlays;
 - no text, watermark, or unrelated props;
 - a stable centered composition.
@@ -61,7 +62,11 @@ Treat user images as references unless the user asks to modify the exact image. 
 
 Copy the selected generated result into the project workflow. Never leave a project-referenced asset only in a generated-images directory.
 
-### 3. Normalize to true pixel art
+### 3. Prepare the chosen artwork mode
+
+**Smooth mode:** preserve the original source resolution where practical, including non-square canvas dimensions. Do not pixelize, convert to a 64px grid, auto-trace SVG, or use `create_pixel_layers.py` for final art. Use matching edited image layers, prepared artwork, or an available image-generation capability. Preserve skin texture, beard, hairstyle, lighting, and smooth anti-aliased alpha edges. If convincing matching layers are unavailable, report missing art; never substitute pixel sprites.
+
+**Pixel mode:**
 
 For the default pixel style, quantize deterministically:
 
@@ -73,7 +78,7 @@ Use a 64-pixel grid and nearest-neighbor enlargement while preserving the source
 
 ### 4. Choose anchors and colors
 
-Use the 512x512 final body, not the pre-pixelized source.
+Measure anchors from the final body at its declared resolution. Record eye, mouth, neutral eyebrow centers and a whole-character rotation pivot (often near the upper torso). The values below are pixel-mode 512px starting estimates.
 
 - Front view defaults: mouth around `(256, 338)`, eye group around `(256, 256)`.
 - Profile defaults: mouth around the visible face edge, single eye around the eye center.
@@ -83,7 +88,9 @@ Use the 512x512 final body, not the pre-pixelized source.
 
 Record anchor decisions explicitly before generating layers.
 
-### 5. Generate expression layers
+### 5. Prepare mouth and blink layers
+
+For reaction-enabled characters, prepare a clean face base with replaceable eyes, eyebrows and mouth. Preserve the original as a reference. Existing painted features need carefully matched inpainting or prepared artwork; never automatically erase them or cover them with solid rectangles. The pixel scaffold below is only suitable for explicitly minimal pixel styles and legacy overlay workflows. For smooth mode use matching transparent edited layers.
 
 Read [references/expression-art-direction.md](references/expression-art-direction.md) before generating or revising humanoid mouths.
 
@@ -129,6 +136,28 @@ Treat `create_pixel_layers.py` as a deterministic scaffold, not the final art di
 - keep the five mouth states related as one mouth while allowing state-specific anatomy. Do not force every character into the same lip, tooth, or cavity template.
 - make `closed` carry the reference personality, keep visible corners on `wide`, and make `round` a stepped oval rather than a square frame.
 
+### Reaction Assets and Expressive Animation
+
+Read [references/expression-art-direction.md](references/expression-art-direction.md) for anatomy and composite rejection criteria. Optional transparent PNGs:
+
+```text
+eyes-worried.png
+eyebrows-worried.png
+sweat-drop.png
+eyes-look-up.png
+eyes-impressed.png
+eyebrows-impressed.png
+mouth-impressed.png
+```
+
+Use the same visual language, pixel density or illustration resolution, and facial coordinates as the neutral layers. Eye variants replace the entire eye group without shifting eyelids or skin. Keep each variant's transparent layer dimensions equal to its neutral counterpart where practical; otherwise measure an explicit override anchor. Neutral `eyebrows.png` must exist when declaring eyebrow variants, and the body must not retain painted brows. Never double eyebrows, pupils, or smiles. Sweat art is a separate small transparent PNG anchored at the temple, not painted into the face. It follows the shared character transform and accelerates downwards while fading.
+
+- **Worried (1.4s):** slightly narrow lids, draw brows inward without distorting the eye sockets, sideways pupils, subtle whole-character tilt, then sweat and smooth recovery. Match eyebrow dimensions/anchor to neutral brows and eyes to neutral eyes. Check for skin seams and detached drops at peak and recovery.
+- **Look Up (1.2s):** matching eye art with pupils diagonally toward the character's upper right (viewer-left for a frontal character), unchanged eyelid and skin placement; subtle tilt, brief hold, return. Check both pupils agree and remain inside the eyes. The runtime uses the complete eye sprite; it does not translate the eye layer.
+- **Impressed (1.5s):** slightly widened eyes, lifted brows, delighted smile, small pullback and approving nod. Mouth dimensions and center match existing mouths; optional `mouth-impressed.png` only appears while not speaking. Check all five audio mouths over this expression and during blinks.
+
+Review neutral, peak, and recovery composites at native resolution and close-up. Reject mismatched skin patches, duplicate anatomy, floating mouths, stretched faces, and cropped motion. When art is missing, omit the undeclared feature and retain neutral art; do not draw a crude substitute. Reactions are temporary poses from `ReactionController`, separate from `CharacterState`. `MotionController` delivers them in `RenderFrame` through the existing animation loop.
+
 ### 6. Write `character.json`
 
 ```bash
@@ -140,6 +169,8 @@ python "<skill>/scripts/write_character.py" \
 ```
 
 For a profile use `--eyes single`. For no eyes use `--eyes none` and omit `--eyes-anchor`.
+
+For smooth output add `--render-style smooth --canvas WIDTH,HEIGHT`. For either artwork mode optionally add `--pivot X,Y`, `--eyebrows-anchor X,Y`, `--reactions reactions.json`, and optionally `--idle-sway idle.json`. The JSON files contain the corresponding schema objects, including per-feature anchors and effect metadata. These flags are optional; existing 512px CLI defaults remain valid.
 
 Read [references/character-format.md](references/character-format.md) when changing the schema or renderer assumptions.
 
@@ -162,9 +193,9 @@ This produces ten cells for a blinking character and five for a character withou
 - eyes and mouths feel painted in the same hand as the body at both original size and matrix-preview size;
 - requested concept or identity, clothing or body treatment, and composition details remain visible in the final composites.
 
-If any cell fails, adjust the body, anchors, face sample, or layer geometry and regenerate the complete matrix. Use `render_preview.py` only for targeted debugging. Do not add browser automation or extra visual test passes unless the matrix exposes a problem that cannot be judged at 256-pixel cell size. Delete temporary review images after validation unless the user wants one retained.
+If any cell fails, adjust the body, anchors, face sample, or layer geometry and regenerate the complete matrix. Use `render_preview.py` only for targeted debugging. For declared reactions the matrix also writes neutral/peak/recovery review images, and smooth characters get eye/mouth close-ups. Inspect those at native resolution. Then verify actual browser Canvas frames: all reactions, moving sweat, maximum sway, blinking, speaking during reactions, and recovery. Preserve review artifacts when useful for delivery.
 
-### 8. Validate and integrate
+### 8. Validate, package, and verify current Canvas loading
 
 Run:
 
@@ -172,15 +203,19 @@ Run:
 python "<skill>/scripts/validate_character.py" "<out>/character.json"
 ```
 
-For working-only delivery, package the required files into `<out>/character.zip` with `character.json` and all referenced PNGs at the ZIP root. Verify the archive and load it through the demo's Custom Avatar uploader. Keep the directory and ZIP under `working/`; do not copy them into `public/`.
+After validating declared assets, dimensions, alpha and anchors, package every referenced PNG including reactions, neutral eyebrows and sweat art. For working-only delivery, package the required files into `<out>/character.zip` with `character.json` and all referenced PNGs at the ZIP root. Verify the archive and load it through the demo's Custom Avatar uploader. Keep the directory and ZIP under `working/`; do not copy them into `public/`.
 
 For explicitly published delivery, verify the engine load path:
 
 ```ts
-const sprite = new TalkingSprite(canvas, {
-  character: "/characters/<slug>/character.json",
+import { createAvatar } from '@hh1st/hoho-avatar';
+import { canvasRenderer } from '@hh1st/hoho-avatar/canvas';
+const avatar = await createAvatar(canvas, {
+  renderer: canvasRenderer({ character: "/characters/<slug>/character.json" }),
   sampleRate: 48000,
 });
+avatar.triggerReaction('worried');
+avatar.setIdleMotion(true);
 ```
 
 Only for explicitly published/demo-integrated delivery: if `examples/basic/main.ts` contains an avatar selector, add the new character unless the user asks for assets only. Preserve all existing characters.

@@ -29,3 +29,17 @@ Reject a humanoid mouth set when any state:
 - looks acceptable alone but pasted on when composed with either eye state.
 
 Render the complete state matrix after every meaningful mouth revision. Judge the composite, not the transparent layer in isolation.
+
+## Reaction anatomy and illustration fidelity
+
+Prepare a clean face base for new reaction-enabled assets. Never automatically erase facial art from legacy bodies. Use prepared or carefully inpainted regions that preserve skin texture, beard, hair, glasses and lighting; no solid rectangular masks. Neutral and expression eyes/brows must replace each other without duplicate outlines or mismatched skin patches.
+
+Worried lids narrow slightly and inner brows draw together. Sideways pupils remain within the same sockets. Look-up pupils point to the character's upper right, without translating the whole eye/skin layer. Impressed eyes widen slightly, brows lift, and the optional smile conveys delight without replacing speech mouths. Keep asymmetry consistent with the character, rather than mirroring mechanically.
+
+Use center anchors measured from actual artwork. Keep neutral and variant group dimensions consistent, or provide explicit feature anchors. Sweat is separate RGBA art at the temple, sharing the character coordinate system, with clear space below it for accelerated travel. Keep it stylistically matched, never a generic Canvas teardrop on a textured face.
+
+For smooth illustration preserve source resolution, anti-aliased alpha, line weight and texture. No pixel scaffold mouths, forced 64px grids, nearest-neighbor reduction or SVG auto-tracing. Pixel mode retains intentionally stepped anatomy and nearest-neighbor scaling.
+
+Review each reaction at neutral, peak and recovery, plus all mouth states and blinking during reactions. Inspect native-scale eyes and mouths for seams, doubles, floating anatomy, and cropped sway; the actual browser renderer is the final composition reference.
+
+Complete raster face variants must not alpha-crossfade displaced pupils, brows or lips. Canvas selects one coherent expression at a time; body transforms and effects retain continuous easing. Inspect partial-intensity, entry, recovery, interruption and reset frames, not just peak art. Ensure the clean base removes the full original feature footprint, including outer brow tips and the skin between extraction masks.
